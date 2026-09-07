@@ -2,7 +2,31 @@
 import '../styles/global.css';
 import '../styles/accessibility.css';
 import '../styles/theme-fix.css';
+import topo00 from '../topo-complete/topo-00.txt?raw';
+import topo01 from '../topo-complete/topo-01.txt?raw';
+import topo02 from '../topo-complete/topo-02.txt?raw';
+import topo03a from '../topo-complete/topo-03a.txt?raw';
+import topo03b from '../topo-complete/topo-03b.txt?raw';
+import topo04a from '../topo-complete/topo-04a.txt?raw';
+import topo04b from '../topo-complete/topo-04b.txt?raw';
+import topo05a from '../topo-complete/topo-05a.txt?raw';
+import topo05b from '../topo-complete/topo-05b.txt?raw';
+import topo06a from '../topo-complete/topo-06a.txt?raw';
+import topo06b from '../topo-complete/topo-06b.txt?raw';
+import topo07a from '../topo-complete/topo-07a.txt?raw';
+import topo07b from '../topo-complete/topo-07b.txt?raw';
+
 const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, solutions, ideas, freedom, and community.' } = Astro.props;
+const topoB64 = (
+  topo00 + topo01 + topo02 + topo03a + topo03b + topo04a + topo04b +
+  topo05a + topo05b + topo06a + topo06b + topo07a + topo07b
+).replace(/\s+/g, '');
+
+if (topoB64.length !== 75444) {
+  throw new Error(`VNH topo background data is incomplete: ${topoB64.length}`);
+}
+
+const topoStyle = `--vnh-topo:url("data:image/webp;base64,${topoB64}")`;
 ---
 <!doctype html>
 <html lang="en">
@@ -14,7 +38,7 @@ const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, soluti
     <link rel="icon" href="/vnh-logo-clean.svg" type="image/svg+xml" />
     <title>{title}</title>
   </head>
-  <body>
+  <body style={topoStyle}>
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="/" aria-label="VNH home">
