@@ -1,32 +1,50 @@
-import headUrl from '../assets-data/topo-head.webp?url';
-import c0 from '../assets-data/topo-00.txt?raw';
-import c1 from '../assets-data/topo-01.txt?raw';
-import c2 from '../assets-data/topo-02.txt?raw';
-import c3 from '../assets-data/topo-03.txt?raw';
-import c4 from '../assets-data/topo-04.txt?raw';
+import c00 from '../topo-complete/topo-00.txt?raw';
+import c01 from '../topo-complete/topo-01.txt?raw';
+import c02 from '../topo-complete/topo-02.txt?raw';
+import c03a from '../topo-complete/topo-03a.txt?raw';
+import c03b from '../topo-complete/topo-03b.txt?raw';
+import c04a from '../topo-complete/topo-04a.txt?raw';
+import c04b from '../topo-complete/topo-04b.txt?raw';
+import c05a from '../topo-complete/topo-05a.txt?raw';
+import c05b from '../topo-complete/topo-05b.txt?raw';
+import c06a from '../topo-complete/topo-06a.txt?raw';
+import c06b from '../topo-complete/topo-06b.txt?raw';
+import c07a from '../topo-complete/topo-07a.txt?raw';
+import c07b from '../topo-complete/topo-07b.txt?raw';
 
 export const prerender = false;
 
-export async function GET({ request }: { request: Request }) {
-  const headResponse = await fetch(new URL(headUrl, request.url));
-  if (!headResponse.ok) {
-    return new Response('Topo background header unavailable', { status: 502 });
+const EXPECTED_BASE64_LENGTH = 75444;
+const EXPECTED_WEBP_BYTES = 56582;
+
+export async function GET() {
+  const b64 = (
+    c00 + c01 + c02 +
+    c03a + c03b +
+    c04a + c04b +
+    c05a + c05b +
+    c06a + c06b +
+    c07a + c07b
+  ).replace(/\s+/g, '');
+
+  if (b64.length !== EXPECTED_BASE64_LENGTH) {
+    return new Response(`Topo data incomplete: ${b64.length}`, { status: 500 });
   }
 
-  const head = new Uint8Array(await headResponse.arrayBuffer());
-  const tailBase64 = (c0 + c1 + c2 + c3 + c4).replace(/\s+/g, '');
-  const tailBinary = atob(tailBase64);
-  const tail = new Uint8Array(tailBinary.length);
-  for (let i = 0; i < tailBinary.length; i += 1) tail[i] = tailBinary.charCodeAt(i);
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
 
-  const complete = new Uint8Array(head.length + tail.length);
-  complete.set(head, 0);
-  complete.set(tail, head.length);
+  if (bytes.length !== EXPECTED_WEBP_BYTES) {
+    return new Response(`Topo decode failed: ${bytes.length}`, { status: 500 });
+  }
 
-  return new Response(complete, {
+  return new Response(bytes, {
     headers: {
       'Content-Type': 'image/webp',
-      'Cache-Control': 'public, max-age=86400, s-maxage=31536000, immutable'
+      'Content-Length': String(bytes.length),
+      'Cache-Control': 'public, max-age=300, s-maxage=300',
+      'X-VNH-Topo-Bytes': String(bytes.length)
     }
   });
 }
