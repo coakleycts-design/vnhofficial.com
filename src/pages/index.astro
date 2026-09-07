@@ -3,34 +3,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout>
   <section class="hero">
-    <div class="hero-grain"></div>
     <div class="container hero-inner">
-      <div class="hero-visual">
-        <div class="hero-kicker">Built for<br/>what's next.</div>
-        <div class="hero-emblem" role="img" aria-label="VNH gear emblem"></div>
+      <div class="hero-logo-panel">
+        <img class="hero-logo" src="/vnh-logo.svg" alt="VNH gear emblem" />
       </div>
+
       <div class="hero-copy">
         <h1 class="display hero-words">Parts<br/>Solutions<br/>Ideas<br/>Freedom<br/>Community</h1>
         <div class="hero-tagline">Real People.<br/>Real Purpose.</div>
         <a class="button hero-button" href="/shop">Explore the Shop <span>→</span></a>
       </div>
-      <div class="hero-sideword" aria-hidden="true">People<br/>Prepared<br/>For A<br/>Stronger<br/>Tomorrow</div>
+
+      <div class="hero-aside" aria-hidden="true">
+        <div class="hero-aside-title">Built<br/>for<br/>what's<br/>next</div>
+        <div class="hero-aside-rule"></div>
+        <div class="hero-aside-object"><span>PEOPLE<br/>PREPARED<br/>FOR A<br/>STRONGER<br/>TOMORROW</span></div>
+      </div>
     </div>
   </section>
 
   <section class="value-strip" aria-label="VNH values">
     <div class="container value-grid">
       <div class="value"><div class="value-icon">⚙</div><strong>Quality Parts</strong><span>Built to last</span></div>
-      <div class="value"><div class="value-icon">◌</div><strong>Real Solutions</strong><span>For everyday challenges</span></div>
+      <div class="value"><div class="value-icon">◯</div><strong>Real Solutions</strong><span>For everyday challenges</span></div>
       <div class="value"><div class="value-icon">◎</div><strong>A Growing Community</strong><span>People like you</span></div>
       <div class="value"><div class="value-icon">☆</div><strong>A Bigger Purpose</strong><span>More than a purchase</span></div>
     </div>
   </section>
 
   <section class="mission-band">
-    <div class="mission-sun" aria-hidden="true"></div>
-    <div class="mountain mountain-back" aria-hidden="true"></div>
-    <div class="mountain mountain-front" aria-hidden="true"></div>
+    <div class="mission-sky" aria-hidden="true"></div>
+    <div class="mission-mountains back" aria-hidden="true"></div>
+    <div class="mission-mountains front" aria-hidden="true"></div>
     <div class="container mission-inner">
       <div class="mission-person" aria-hidden="true"><span></span></div>
       <div class="mission-copy">
@@ -56,29 +60,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <button class="button primary" type="submit">Keep Me Updated <span>→</span></button>
         <div class="form-note" id="signup-status">No spam. Just what matters.</div>
       </form>
+      <div class="signup-sideword" aria-hidden="true">Ideas Today<br/>A Stronger<br/>Tomorrow</div>
     </div>
   </section>
 
   <section class="collections">
     <div class="container">
       <div class="section-head">
-        <div><div class="eyebrow">Featured Collections</div><p>Purpose-built products and ideas for everyday readiness.</p></div>
-        <a href="/shop" class="eyebrow">Shop All →</a>
+        <div><div class="eyebrow">Featured Collections</div><p>Quality gear for everyday readiness.</p></div>
+        <a href="/shop" class="eyebrow shop-all">Shop All →</a>
       </div>
       <div class="collection-grid">
-        <a class="collection-card parts-card" href="/shop"><div class="card-index">01</div><h3 class="display">Parts</h3><p>Reliable components for real use.</p><span class="card-arrow">→</span></a>
-        <a class="collection-card solutions-card" href="/shop"><div class="card-index">02</div><h3 class="display">Solutions</h3><p>Practical gear and useful tools.</p><span class="card-arrow">→</span></a>
-        <a class="collection-card ideas-card" href="/shop"><div class="card-index">03</div><h3 class="display">Ideas</h3><p>Insights, resources, and perspective.</p><span class="card-arrow">→</span></a>
-        <a class="collection-card community-card" href="/mission"><div class="card-index">04</div><h3 class="display">Community</h3><p>Stronger together.</p><span class="card-arrow">→</span></a>
+        <a class="collection-card parts-card" href="/shop"><div class="card-art fasteners"></div><div class="card-copy"><h3 class="display">Parts</h3><p>Reliable components for real use.</p><span>→</span></div></a>
+        <a class="collection-card solutions-card" href="/shop"><div class="card-art fieldgear"></div><div class="card-copy"><h3 class="display">Solutions</h3><p>Tools that work as hard as you do.</p><span>→</span></div></a>
+        <a class="collection-card ideas-card" href="/shop"><div class="card-art notebook"></div><div class="card-copy"><h3 class="display">Ideas</h3><p>Insights, resources, and perspectives.</p><span>→</span></div></a>
+        <a class="collection-card community-card" href="/mission"><div class="card-art people"></div><div class="card-copy"><h3 class="display">Community</h3><p>Stronger together.</p><span>→</span></div></a>
       </div>
     </div>
   </section>
 
   <section class="closing">
+    <div class="closing-mountains" aria-hidden="true"></div>
     <div class="closing-flag" aria-hidden="true"></div>
     <div class="container closing-inner">
       <div>
-        <div class="eyebrow">VNH</div>
         <h2 class="display">Real People. Real Purpose.</h2>
         <p>Parts &nbsp;|&nbsp; Solutions &nbsp;|&nbsp; Ideas &nbsp;|&nbsp; Freedom &nbsp;|&nbsp; Community</p>
       </div>
@@ -91,9 +96,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     const status = document.querySelector('#signup-status');
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const email = document.querySelector('#email')?.value?.trim();
+      const emailInput = document.querySelector('#email');
+      const email = emailInput instanceof HTMLInputElement ? emailInput.value.trim() : '';
       if (!email) return;
-      status.textContent = 'Signing you up…';
+      if (status) status.textContent = 'Signing you up…';
       try {
         const response = await fetch('/api/subscribe', {
           method: 'POST',
@@ -102,10 +108,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || 'Unable to subscribe');
-        status.textContent = 'You’re on the list. Watch your inbox.';
-        form.reset();
+        if (status) status.textContent = 'You’re on the list. Watch your inbox.';
+        if (form instanceof HTMLFormElement) form.reset();
       } catch (error) {
-        status.textContent = error?.message || 'Something went wrong. Please try again.';
+        if (status) status.textContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       }
     });
   </script>
