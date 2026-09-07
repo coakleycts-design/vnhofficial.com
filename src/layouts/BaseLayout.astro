@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, solutions, ideas, freedom, and community.' } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#05080a" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/" aria-label="VNH home">
+          <svg class="brand-mark" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" fill="#0b1013" stroke="#aeb5b9" stroke-width="7"/>
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#70787d" stroke-width="2"/>
+            <path d="M14 60h12M94 60h12M60 14v12M60 94v12M28 28l9 9M83 83l9 9M92 28l-9 9M37 83l-9 9" stroke="#aeb5b9" stroke-width="7" stroke-linecap="square"/>
+            <text x="60" y="72" text-anchor="middle" fill="#d5d9dc" font-size="34" font-weight="900" font-family="Arial, sans-serif">VNH</text>
+            <path d="M31 82h58M36 89h48M43 96h34" stroke="#929a9f" stroke-width="3"/>
+          </svg>
+          <div>
+            <div class="brand-word">VNH</div>
+            <div class="brand-tag">REAL PEOPLE. REAL PURPOSE.</div>
+          </div>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="/shop">Shop</a>
+          <a href="/mission">Mission</a>
+          <a href="/contact">Contact</a>
+        </nav>
+
+        <div class="header-actions" aria-label="Site actions">
+          <a class="icon-button" href="/shop" aria-label="Search shop">⌕</a>
+          <a class="icon-button" href="/shop" aria-label="Account">●</a>
+          <a class="icon-button" href="/shop" aria-label="Cart">▰</a>
+        </div>
+      </div>
+    </header>
+
+    <main><slot /></main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>© {new Date().getFullYear()} VNH. Real People. Real Purpose.</div>
+        <div class="footer-links">
+          <a href="/mission">Mission</a>
+          <a href="/contact">Contact</a>
+          <a href="#keep-updated">Keep Updated</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
