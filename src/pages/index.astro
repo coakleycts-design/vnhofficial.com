@@ -1,11 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/home.css';
 ---
 <BaseLayout>
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-logo-panel">
-        <img class="hero-logo" src="/vnh-logo.svg" alt="VNH gear emblem" />
+        <img class="hero-logo" data-vnh-logo alt="VNH gear emblem" />
       </div>
 
       <div class="hero-copy">
@@ -32,11 +33,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </section>
 
   <section class="mission-band">
-    <div class="mission-sky" aria-hidden="true"></div>
-    <div class="mission-mountains back" aria-hidden="true"></div>
-    <div class="mission-mountains front" aria-hidden="true"></div>
     <div class="container mission-inner">
-      <div class="mission-person" aria-hidden="true"><span></span></div>
+      <div class="mission-person" aria-hidden="true"></div>
       <div class="mission-copy">
         <div class="eyebrow">Our Mission</div>
         <h2 class="display">Freedom Through Action</h2>
@@ -71,16 +69,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <a href="/shop" class="eyebrow shop-all">Shop All →</a>
       </div>
       <div class="collection-grid">
-        <a class="collection-card parts-card" href="/shop"><div class="card-art fasteners"></div><div class="card-copy"><h3 class="display">Parts</h3><p>Reliable components for real use.</p><span>→</span></div></a>
-        <a class="collection-card solutions-card" href="/shop"><div class="card-art fieldgear"></div><div class="card-copy"><h3 class="display">Solutions</h3><p>Tools that work as hard as you do.</p><span>→</span></div></a>
-        <a class="collection-card ideas-card" href="/shop"><div class="card-art notebook"></div><div class="card-copy"><h3 class="display">Ideas</h3><p>Insights, resources, and perspectives.</p><span>→</span></div></a>
-        <a class="collection-card community-card" href="/mission"><div class="card-art people"></div><div class="card-copy"><h3 class="display">Community</h3><p>Stronger together.</p><span>→</span></div></a>
+        <a class="collection-card" href="/shop"><div class="card-art fasteners"></div><div class="card-copy"><h3 class="display">Parts</h3><p>Reliable components for real use.</p><span>→</span></div></a>
+        <a class="collection-card" href="/shop"><div class="card-art fieldgear"></div><div class="card-copy"><h3 class="display">Solutions</h3><p>Tools that work as hard as you do.</p><span>→</span></div></a>
+        <a class="collection-card" href="/shop"><div class="card-art notebook"></div><div class="card-copy"><h3 class="display">Ideas</h3><p>Insights, resources, and perspectives.</p><span>→</span></div></a>
+        <a class="collection-card" href="/mission"><div class="card-art people"></div><div class="card-copy"><h3 class="display">Community</h3><p>Stronger together.</p><span>→</span></div></a>
       </div>
     </div>
   </section>
 
   <section class="closing">
-    <div class="closing-mountains" aria-hidden="true"></div>
     <div class="closing-flag" aria-hidden="true"></div>
     <div class="container closing-inner">
       <div>
@@ -92,6 +89,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </section>
 
   <script>
+    const headerLogo = document.querySelector('.brand-mark');
+    const heroLogo = document.querySelector('[data-vnh-logo]');
+    if (headerLogo instanceof HTMLImageElement && heroLogo instanceof HTMLImageElement) {
+      heroLogo.src = headerLogo.src;
+    }
+
     const form = document.querySelector('#signup-form');
     const status = document.querySelector('#signup-status');
     form?.addEventListener('submit', async (event) => {
