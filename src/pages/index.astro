@@ -1,12 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/home.css';
+import '../styles/home-fix.css';
 ---
 <BaseLayout>
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-logo-panel">
-        <img class="hero-logo" data-vnh-logo alt="VNH gear emblem" />
+        <img class="hero-logo" src="/vnh-logo.svg" alt="VNH gear emblem" />
       </div>
 
       <div class="hero-copy">
@@ -89,12 +90,6 @@ import '../styles/home.css';
   </section>
 
   <script>
-    const headerLogo = document.querySelector('.brand-mark');
-    const heroLogo = document.querySelector('[data-vnh-logo]');
-    if (headerLogo instanceof HTMLImageElement && heroLogo instanceof HTMLImageElement) {
-      heroLogo.src = headerLogo.src;
-    }
-
     const form = document.querySelector('#signup-form');
     const status = document.querySelector('#signup-status');
     form?.addEventListener('submit', async (event) => {
