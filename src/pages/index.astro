@@ -1,0 +1,128 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout>
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-emblem-wrap">
+        <svg class="hero-emblem" viewBox="0 0 520 520" role="img" aria-label="VNH gear emblem">
+          <defs>
+            <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#e0e3e5"/>
+              <stop offset=".45" stop-color="#8b9297"/>
+              <stop offset="1" stop-color="#d4d7d9"/>
+            </linearGradient>
+          </defs>
+          <circle cx="260" cy="260" r="205" fill="#0a0d0f" stroke="url(#steel)" stroke-width="22"/>
+          <circle cx="260" cy="260" r="169" fill="none" stroke="#777f84" stroke-width="5"/>
+          <g stroke="#c3c8cb" stroke-width="26" stroke-linecap="square">
+            <path d="M260 20v42M260 458v42M20 260h42M458 260h42"/>
+            <path d="M90 90l30 30M400 400l30 30M430 90l-30 30M120 400l-30 30"/>
+            <path d="M170 44l14 40M336 436l14 40M44 170l40 14M436 336l40 14"/>
+            <path d="M350 44l-14 40M184 436l-14 40M476 170l-40 14M84 336l-40 14"/>
+          </g>
+          <g fill="none" stroke="#9aa1a6" stroke-width="10">
+            <circle cx="198" cy="158" r="48"/>
+            <circle cx="324" cy="162" r="42"/>
+            <circle cx="260" cy="115" r="27"/>
+          </g>
+          <text x="260" y="309" text-anchor="middle" fill="url(#steel)" font-size="150" font-weight="900" font-family="Arial, sans-serif">VNH</text>
+          <g stroke="#b1b7bb" stroke-width="10">
+            <path d="M105 340h310"/><path d="M126 368h268"/><path d="M151 396h218"/>
+          </g>
+        </svg>
+      </div>
+      <div class="hero-copy">
+        <h1 class="display hero-words">Parts<br/>Solutions<br/>Ideas<br/>Freedom<br/>Community</h1>
+        <div class="hero-tagline">Real People.<br/>Real Purpose.</div>
+        <a class="button" href="/shop">Explore the Shop →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="value-strip" aria-label="VNH values">
+    <div class="container value-grid">
+      <div class="value"><div class="value-icon">⚙</div><strong>Quality Parts</strong><span>Built to last</span></div>
+      <div class="value"><div class="value-icon">◉</div><strong>Real Solutions</strong><span>For everyday challenges</span></div>
+      <div class="value"><div class="value-icon">◎</div><strong>A Growing Community</strong><span>People like you</span></div>
+      <div class="value"><div class="value-icon">☆</div><strong>A Bigger Purpose</strong><span>More than a purchase</span></div>
+    </div>
+  </section>
+
+  <section class="mission-band">
+    <div class="container mission-inner">
+      <div class="hiker" aria-hidden="true"></div>
+      <div class="mission-copy">
+        <div class="eyebrow">Our Mission</div>
+        <h2 class="display">Freedom Through Action</h2>
+        <p>To support freedom, personal responsibility, and a community of individuals who refuse to back down.</p>
+        <a class="button" href="/mission">Learn More →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="signup" id="keep-updated">
+    <div class="container signup-inner">
+      <div>
+        <div class="eyebrow">Keep Updated</div>
+        <h2 class="display">Stay in the Loop</h2>
+        <p>Get the latest on new products, updates, exclusive releases, and more.</p>
+      </div>
+      <form class="signup-form" id="signup-form">
+        <label class="sr-only" for="email">Email address</label>
+        <input id="email" name="email" type="email" placeholder="Enter your email address" required />
+        <button class="button primary" type="submit">Keep Me Updated →</button>
+        <div class="form-note" id="signup-status">No spam. Just what matters.</div>
+      </form>
+    </div>
+  </section>
+
+  <section class="collections">
+    <div class="container">
+      <div class="section-head">
+        <div><div class="eyebrow">Featured Collections</div><p>Purpose-built products and ideas for everyday readiness.</p></div>
+        <a href="/shop" class="eyebrow">Shop All →</a>
+      </div>
+      <div class="collection-grid">
+        <a class="collection-card" href="/shop"><h3 class="display">Parts</h3><p>Reliable components for real use.</p></a>
+        <a class="collection-card" href="/shop"><h3 class="display">Solutions</h3><p>Practical gear and useful tools.</p></a>
+        <a class="collection-card" href="/shop"><h3 class="display">Ideas</h3><p>Insights, resources, and perspective.</p></a>
+        <a class="collection-card" href="/mission"><h3 class="display">Community</h3><p>Stronger together.</p></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="container closing-inner">
+      <div>
+        <h2 class="display">Real People. Real Purpose.</h2>
+        <p>Parts &nbsp;|&nbsp; Solutions &nbsp;|&nbsp; Ideas &nbsp;|&nbsp; Freedom &nbsp;|&nbsp; Community</p>
+      </div>
+      <a class="button" href="#keep-updated">Be Part of It →</a>
+    </div>
+  </section>
+
+  <script>
+    const form = document.querySelector('#signup-form');
+    const status = document.querySelector('#signup-status');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.querySelector('#email')?.value?.trim();
+      if (!email) return;
+      status.textContent = 'Signing you up…';
+      try {
+        const response = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Unable to subscribe');
+        status.textContent = 'You’re on the list. Watch your inbox.';
+        form.reset();
+      } catch (error) {
+        status.textContent = error?.message || 'Something went wrong. Please try again.';
+      }
+    });
+  </script>
+</BaseLayout>
