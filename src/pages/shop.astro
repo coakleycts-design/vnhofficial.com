@@ -1,23 +1,38 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getShopPage } from '../lib/sanity';
+
+const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const shop = await getShopPage(runtimeEnv);
+const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
+const seoTitle = text(shop.seoTitle, 'Shop VNH | Products, Stickers, Collectibles & More');
+const seoDescription = text(shop.seoDescription, 'Shop VNH products, stickers, collectibles, apparel, and new releases built around practical ideas and real-world use.');
+const eyebrow = text(shop.eyebrow, 'Shop');
+const heading = text(shop.heading, 'Built for Real Use');
+const intro = text(shop.intro, 'The storefront is being prepared for Shopify. Products will appear here once the catalog connection is configured.');
+const card1Title = text(shop.card1Title, 'Stickers');
+const card1Body = text(shop.card1Body, 'VNH branded designs and releases.');
+const card2Title = text(shop.card2Title, 'Coins');
+const card2Body = text(shop.card2Body, 'Collectible VNH challenge coins.');
+const card3Title = text(shop.card3Title, 'Apparel');
+const card3Body = text(shop.card3Body, 'Coming as the catalog expands.');
+const card4Title = text(shop.card4Title, 'More');
+const card4Body = text(shop.card4Body, 'New products and useful items in development.');
 ---
-<BaseLayout
-  title="Shop VNH | Products, Stickers, Collectibles & More"
-  description="Shop VNH products, stickers, collectibles, apparel, and new releases built around practical ideas and real-world use."
->
+<BaseLayout title={seoTitle} description={seoDescription}>
   <section class="page-hero">
     <div class="container">
-      <div class="eyebrow">Shop</div>
-      <h1 class="display">Built for Real Use</h1>
-      <p>The storefront is being prepared for Shopify. Products will appear here once the catalog connection is configured.</p>
+      <div class="eyebrow">{eyebrow}</div>
+      <h1 class="display">{heading}</h1>
+      <p>{intro}</p>
     </div>
   </section>
   <section class="container page-copy">
     <div class="collection-grid">
-      <div class="collection-card"><h2 class="display">Stickers</h2><p>VNH branded designs and releases.</p></div>
-      <div class="collection-card"><h2 class="display">Coins</h2><p>Collectible VNH challenge coins.</p></div>
-      <div class="collection-card"><h2 class="display">Apparel</h2><p>Coming as the catalog expands.</p></div>
-      <div class="collection-card"><h2 class="display">More</h2><p>New products and useful items in development.</p></div>
+      <div class="collection-card"><h2 class="display">{card1Title}</h2><p>{card1Body}</p></div>
+      <div class="collection-card"><h2 class="display">{card2Title}</h2><p>{card2Body}</p></div>
+      <div class="collection-card"><h2 class="display">{card3Title}</h2><p>{card3Body}</p></div>
+      <div class="collection-card"><h2 class="display">{card4Title}</h2><p>{card4Body}</p></div>
     </div>
   </section>
 </BaseLayout>
