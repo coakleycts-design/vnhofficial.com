@@ -1,6 +1,7 @@
 export type SiteMedia = {
   logoUrl?: string;
   topoUrl?: string;
+  socialShareUrl?: string;
 };
 
 export type HomeMedia = {
@@ -32,7 +33,8 @@ async function sanityQuery<T>(query: string): Promise<T | null> {
 export async function getSiteMedia(): Promise<SiteMedia> {
   return await sanityQuery<SiteMedia>(`*[_type == "siteSettings"][0]{
     "logoUrl": logo.asset->url,
-    "topoUrl": topoBackground.asset->url
+    "topoUrl": topoBackground.asset->url,
+    "socialShareUrl": socialShareImage.asset->url
   }`) ?? {};
 }
 
