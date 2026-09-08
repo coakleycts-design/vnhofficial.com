@@ -6,7 +6,13 @@ import {schemaTypes} from './schemaTypes'
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'iec4sn1b'
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
 
-const singletonTypes = new Set(['siteSettings', 'homePage'])
+const singletonTypes = new Set(['siteSettings', 'homePage', 'missionPage', 'contactPage', 'shopPage'])
+
+const singletonItem = (S: any, title: string, schemaType: string) =>
+  S.listItem()
+    .title(title)
+    .id(schemaType)
+    .child(S.document().schemaType(schemaType).documentId(schemaType))
 
 export default defineConfig({
   name: 'vnh',
@@ -19,14 +25,11 @@ export default defineConfig({
         S.list()
           .title('VNH Content')
           .items([
-            S.listItem()
-              .title('Site Settings')
-              .id('siteSettings')
-              .child(S.document().schemaType('siteSettings').documentId('siteSettings')),
-            S.listItem()
-              .title('Home Page')
-              .id('homePage')
-              .child(S.document().schemaType('homePage').documentId('homePage'))
+            singletonItem(S, 'Site Settings', 'siteSettings'),
+            singletonItem(S, 'Home Page', 'homePage'),
+            singletonItem(S, 'Mission Page', 'missionPage'),
+            singletonItem(S, 'Contact Page', 'contactPage'),
+            singletonItem(S, 'Shop Page', 'shopPage')
           ])
     }),
     visionTool()
@@ -36,7 +39,7 @@ export default defineConfig({
     newDocumentOptions: (prev) => prev.filter((item) => !singletonTypes.has(item.templateId)),
     actions: (prev, context) =>
       singletonTypes.has(context.schemaType)
-        ? prev.filter(({action}) => action !== 'duplicate')
+        ? prev.filter(({action}) => action !== 'duplicate' && action !== 'delete')
         : prev
   }
 })
