@@ -1,36 +1,64 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getContactPage } from '../lib/sanity';
+
+const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const contact = await getContactPage(runtimeEnv);
+const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
+const seoTitle = text(contact.seoTitle, 'Contact VNH | Questions, Orders & Partnerships');
+const seoDescription = text(contact.seoDescription, 'Contact VNH for general questions, order support, product questions, partnerships, or media inquiries.');
+const eyebrow = text(contact.eyebrow, 'Contact');
+const heading = text(contact.heading, 'Get in Touch');
+const intro = text(contact.intro, 'Questions, ideas, order support, or something we should know? Send us a message.');
+const nameLabel = text(contact.nameLabel, 'Name');
+const emailLabel = text(contact.emailLabel, 'Email address');
+const orderLabel = text(contact.orderLabel, 'Order number');
+const orderPlaceholder = text(contact.orderPlaceholder, 'Order number (optional)');
+const topicLabel = text(contact.topicLabel, 'Topic');
+const topicPlaceholder = text(contact.topicPlaceholder, 'Select a topic');
+const topicGeneral = text(contact.topicGeneral, 'General question');
+const topicOrder = text(contact.topicOrder, 'Order support');
+const topicProduct = text(contact.topicProduct, 'Product question');
+const topicPartnership = text(contact.topicPartnership, 'Partnership or media');
+const messageLabel = text(contact.messageLabel, 'Message');
+const submitLabel = text(contact.submitLabel, 'Send Message');
+const sendingMessage = text(contact.sendingMessage, 'Sending…');
+const successMessage = text(contact.successMessage, 'Message sent. We’ll be in touch.');
+const errorMessage = text(contact.errorMessage, 'Something went wrong. Please try again.');
 ---
-<BaseLayout
-  title="Contact VNH | Questions, Orders & Partnerships"
-  description="Contact VNH for general questions, order support, product questions, partnerships, or media inquiries."
->
+<BaseLayout title={seoTitle} description={seoDescription}>
   <section class="page-hero">
     <div class="container">
-      <div class="eyebrow">Contact</div>
-      <h1 class="display">Get in Touch</h1>
-      <p>Questions, ideas, order support, or something we should know? Send us a message.</p>
+      <div class="eyebrow">{eyebrow}</div>
+      <h1 class="display">{heading}</h1>
+      <p>{intro}</p>
     </div>
   </section>
   <section class="container page-copy">
-    <form class="contact-form" id="contact-form">
-      <label class="sr-only" for="contact-name">Name</label>
-      <input id="contact-name" name="name" type="text" placeholder="Name" autocomplete="name" required />
-      <label class="sr-only" for="contact-email">Email address</label>
-      <input id="contact-email" name="email" type="email" placeholder="Email address" autocomplete="email" required />
-      <label class="sr-only" for="contact-order">Order number</label>
-      <input id="contact-order" name="orderNumber" type="text" placeholder="Order number (optional)" />
-      <label class="sr-only" for="contact-subject">Topic</label>
+    <form
+      class="contact-form"
+      id="contact-form"
+      data-sending={sendingMessage}
+      data-success={successMessage}
+      data-error={errorMessage}
+    >
+      <label class="sr-only" for="contact-name">{nameLabel}</label>
+      <input id="contact-name" name="name" type="text" placeholder={nameLabel} autocomplete="name" required />
+      <label class="sr-only" for="contact-email">{emailLabel}</label>
+      <input id="contact-email" name="email" type="email" placeholder={emailLabel} autocomplete="email" required />
+      <label class="sr-only" for="contact-order">{orderLabel}</label>
+      <input id="contact-order" name="orderNumber" type="text" placeholder={orderPlaceholder} />
+      <label class="sr-only" for="contact-subject">{topicLabel}</label>
       <select id="contact-subject" name="subject" required>
-        <option value="">Select a topic</option>
-        <option>General question</option>
-        <option>Order support</option>
-        <option>Product question</option>
-        <option>Partnership or media</option>
+        <option value="">{topicPlaceholder}</option>
+        <option>{topicGeneral}</option>
+        <option>{topicOrder}</option>
+        <option>{topicProduct}</option>
+        <option>{topicPartnership}</option>
       </select>
-      <label class="sr-only" for="contact-message">Message</label>
-      <textarea id="contact-message" name="message" placeholder="Message" required></textarea>
-      <button class="button primary" type="submit">Send Message →</button>
+      <label class="sr-only" for="contact-message">{messageLabel}</label>
+      <textarea id="contact-message" name="message" placeholder={messageLabel} required></textarea>
+      <button class="button primary" type="submit">{submitLabel} →</button>
       <div class="form-note" id="contact-status" aria-live="polite"></div>
     </form>
   </section>
@@ -40,7 +68,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const body = Object.fromEntries(new FormData(form).entries());
-      if (status) status.textContent = 'Sending…';
+      const sending = form instanceof HTMLElement ? form.dataset.sending || 'Sending…' : 'Sending…';
+      const success = form instanceof HTMLElement ? form.dataset.success || 'Message sent. We’ll be in touch.' : 'Message sent. We’ll be in touch.';
+      const fallbackError = form instanceof HTMLElement ? form.dataset.error || 'Something went wrong. Please try again.' : 'Something went wrong. Please try again.';
+      if (status) status.textContent = sending;
       try {
         const response = await fetch('/api/contact', {
           method: 'POST',
@@ -48,11 +79,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           body: JSON.stringify(body)
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data?.error || 'Unable to send message');
-        if (status) status.textContent = 'Message sent. We’ll be in touch.';
+        if (!response.ok) throw new Error(data?.error || fallbackError);
+        if (status) status.textContent = success;
         if (form instanceof HTMLFormElement) form.reset();
       } catch (error) {
-        if (status) status.textContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+        if (status) status.textContent = error instanceof Error ? error.message : fallbackError;
       }
     });
   </script>
