@@ -1,4 +1,4 @@
-import modelB64 from '../assets/product-model.b64.txt?raw';
+import modelB64 from '../assets/product-model-small.b64.txt?raw';
 
 export const prerender = false;
 
