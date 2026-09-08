@@ -1,20 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import newCoinFallback from '../assets/newcoin.jpg?inline';
-import { getHomeMedia } from '../lib/sanity';
+import { getHomeMedia, getSiteMedia } from '../lib/sanity';
 import '../styles/home.css';
 import '../styles/home-fix.css';
 import '../styles/final-home.css';
 
-const homeMedia = await getHomeMedia();
+const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(), getSiteMedia()]);
 const latestLeftSrc = homeMedia.latestLeftUrl || newCoinFallback;
 const latestRightSrc = homeMedia.latestRightUrl || '/product-stickers.webp?v=2';
+const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
 ---
 <BaseLayout>
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-logo-panel">
-        <img class="hero-logo" src="/vnh-logo-clean.svg" alt="VNH gear emblem" />
+        <img class="hero-logo" src={logoSrc} alt="VNH gear emblem" />
       </div>
 
       <div class="hero-copy">
