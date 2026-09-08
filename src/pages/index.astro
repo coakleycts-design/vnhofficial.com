@@ -20,7 +20,10 @@ const latestLeftSrc = validSanityImage(homeMedia.latestLeftUrl) ? homeMedia.late
 const latestRightSrc = validSanityImage(homeMedia.latestRightUrl) ? homeMedia.latestRightUrl! : stickersFallbackSrc;
 const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh-logo-clean.svg';
 ---
-<BaseLayout>
+<BaseLayout
+  title="VNH | Parts, Solutions, Ideas & Freedom"
+  description="VNH creates practical products, useful solutions, and original ideas for people who value freedom and personal responsibility."
+>
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-logo-panel">
