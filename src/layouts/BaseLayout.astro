@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import '../styles/accessibility.css';
 import '../styles/theme-fix.css';
-import { getSiteMedia } from '../lib/sanity';
+import { getSiteSettings } from '../lib/sanity';
 
 const {
   title = 'VNH | Parts, Solutions, Ideas & Freedom',
@@ -15,12 +15,25 @@ const {
 } = Astro.props;
 
 const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
-const siteMedia = await getSiteMedia(runtimeEnv);
-const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
-const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
+const siteSettings = await getSiteSettings(runtimeEnv);
+const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
+const brandName = text(siteSettings.brandName, 'VNH');
+const brandTagline = text(siteSettings.brandTagline, 'REAL PEOPLE. REAL PURPOSE.');
+const navShopLabel = text(siteSettings.navShopLabel, 'Shop');
+const navMissionLabel = text(siteSettings.navMissionLabel, 'Mission');
+const navContactLabel = text(siteSettings.navContactLabel, 'Contact');
+const browseShopAriaLabel = text(siteSettings.browseShopAriaLabel, 'Browse shop');
+const accountAriaLabel = text(siteSettings.accountAriaLabel, 'Account');
+const cartAriaLabel = text(siteSettings.cartAriaLabel, 'Cart');
+const footerText = text(siteSettings.footerText, 'VNH. Real People. Real Purpose.');
+const footerShopLabel = text(siteSettings.footerShopLabel, 'Shop');
+const footerMissionLabel = text(siteSettings.footerMissionLabel, 'Mission');
+const footerContactLabel = text(siteSettings.footerContactLabel, 'Contact');
+const logoSrc = siteSettings.logoUrl || '/vnh-logo-clean.svg';
+const topoSrc = siteSettings.topoUrl || '/vnh-topo-simple.svg';
 const siteOrigin = Astro.site ?? new URL('https://vnhofficial.com');
 const canonicalUrl = canonical ? new URL(canonical, siteOrigin).toString() : new URL(Astro.url.pathname, siteOrigin).toString();
-const socialImageSource = socialImage || siteMedia.socialShareUrl;
+const socialImageSource = socialImage || siteSettings.socialShareUrl;
 const socialImageUrl = socialImageSource ? new URL(socialImageSource, siteOrigin).toString() : undefined;
 const googleSiteVerification = runtimeEnv.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const bingSiteVerification = runtimeEnv.PUBLIC_BING_SITE_VERIFICATION;
@@ -29,15 +42,15 @@ const defaultStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'VNH',
+    name: brandName,
     url: siteOrigin.toString(),
     logo: new URL(logoSrc, siteOrigin).toString(),
-    slogan: 'Real People. Real Purpose.'
+    slogan: brandTagline
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'VNH',
+    name: brandName,
     url: siteOrigin.toString(),
     description: 'Parts, solutions, ideas, and freedom.'
   },
@@ -49,7 +62,7 @@ const defaultStructuredData = [
     url: canonicalUrl,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'VNH',
+      name: brandName,
       url: siteOrigin.toString()
     }
   }
@@ -74,20 +87,20 @@ const jsonLd = structuredData
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="icon" href={logoSrc} />
 
-    <meta property="og:site_name" content="VNH" />
+    <meta property="og:site_name" content={brandName} />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
     {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
-    {socialImageUrl && <meta property="og:image:alt" content="VNH — Real People. Real Purpose." />}
+    {socialImageUrl && <meta property="og:image:alt" content={`${brandName} — ${brandTagline}`} />}
 
     <meta name="twitter:card" content={socialImageUrl ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
-    {socialImageUrl && <meta name="twitter:image:alt" content="VNH — Real People. Real Purpose." />}
+    {socialImageUrl && <meta name="twitter:image:alt" content={`${brandName} — ${brandTagline}`} />}
 
     <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)}></script>
     <title>{title}</title>
@@ -95,31 +108,31 @@ const jsonLd = structuredData
   <body style={`--vnh-topo-image:url("${topoSrc}")`}>
     <header class="site-header">
       <div class="container header-inner">
-        <a class="brand" href="/" aria-label="VNH home">
+        <a class="brand" href="/" aria-label={`${brandName} home`}>
           <img class="brand-mark" src={logoSrc} alt="" />
           <div class="brand-lockup">
-            <div class="brand-word">VNH</div>
-            <div class="brand-tag">REAL PEOPLE. REAL PURPOSE.</div>
+            <div class="brand-word">{brandName}</div>
+            <div class="brand-tag">{brandTagline}</div>
           </div>
         </a>
         <nav class="main-nav" aria-label="Primary navigation">
-          <a href="/shop">Shop</a>
-          <a href="/mission">Mission</a>
-          <a href="/contact">Contact</a>
+          <a href="/shop">{navShopLabel}</a>
+          <a href="/mission">{navMissionLabel}</a>
+          <a href="/contact">{navContactLabel}</a>
         </nav>
         <div class="header-actions" aria-label="Site actions">
-          <a class="icon-button" href="/shop" aria-label="Browse shop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
-          <a class="icon-button" href="/shop" aria-label="Account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
-          <a class="icon-button" href="/shop" aria-label="Cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></a>
+          <a class="icon-button" href="/shop" aria-label={browseShopAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
+          <a class="icon-button" href="/shop" aria-label={accountAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
+          <a class="icon-button" href="/shop" aria-label={cartAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></a>
         </div>
       </div>
     </header>
     <main><slot /></main>
     <footer class="site-footer">
       <div class="container footer-inner">
-        <div class="footer-brand"><img src={logoSrc} alt="" /><span>VNH</span></div>
-        <div>© {new Date().getFullYear()} VNH. Real People. Real Purpose.</div>
-        <div class="footer-links"><a href="/shop">Shop</a><a href="/mission">Mission</a><a href="/contact">Contact</a></div>
+        <div class="footer-brand"><img src={logoSrc} alt="" /><span>{brandName}</span></div>
+        <div>© {new Date().getFullYear()} {footerText}</div>
+        <div class="footer-links"><a href="/shop">{footerShopLabel}</a><a href="/mission">{footerMissionLabel}</a><a href="/contact">{footerContactLabel}</a></div>
       </div>
     </footer>
   </body>
