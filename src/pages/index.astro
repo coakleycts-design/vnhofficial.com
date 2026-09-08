@@ -9,7 +9,8 @@ import '../styles/home.css';
 import '../styles/home-fix.css';
 import '../styles/final-home.css';
 
-const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(), getSiteMedia()]);
+const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(runtimeEnv), getSiteMedia(runtimeEnv)]);
 const newCoinBase64 = `${newCoin0}${newCoin1}${newCoin2}`.replace(/\s+/g, '');
 if (newCoinBase64.length !== 16300 || !newCoinBase64.startsWith('/9j/') || !newCoinBase64.endsWith('/2Q==')) {
   throw new Error(`Invalid bundled NewCoin fallback (${newCoinBase64.length} chars)`);
