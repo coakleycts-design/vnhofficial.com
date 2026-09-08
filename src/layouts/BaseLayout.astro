@@ -19,7 +19,10 @@ const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
 const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
 const siteOrigin = Astro.site ?? new URL('https://vnhofficial.com');
 const canonicalUrl = canonical ? new URL(canonical, siteOrigin).toString() : new URL(Astro.url.pathname, siteOrigin).toString();
-const socialImageUrl = socialImage ? new URL(socialImage, siteOrigin).toString() : undefined;
+const socialImageSource = socialImage || siteMedia.socialShareUrl;
+const socialImageUrl = socialImageSource ? new URL(socialImageSource, siteOrigin).toString() : undefined;
+const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const bingSiteVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION;
 
 const defaultStructuredData = [
   {
@@ -63,6 +66,8 @@ const jsonLd = structuredData
     <meta name="description" content={description} />
     <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
     <meta name="theme-color" content="#030405" />
+    {googleSiteVerification && <meta name="google-site-verification" content={googleSiteVerification} />}
+    {bingSiteVerification && <meta name="msvalidate.01" content={bingSiteVerification} />}
 
     <link rel="canonical" href={canonicalUrl} />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
@@ -75,13 +80,15 @@ const jsonLd = structuredData
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
     {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
+    {socialImageUrl && <meta property="og:image:alt" content="VNH — Real People. Real Purpose." />}
 
     <meta name="twitter:card" content={socialImageUrl ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+    {socialImageUrl && <meta name="twitter:image:alt" content="VNH — Real People. Real Purpose." />}
 
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)}></script>
     <title>{title}</title>
   </head>
   <body style={`--vnh-topo-image:url("${topoSrc}")`}>
