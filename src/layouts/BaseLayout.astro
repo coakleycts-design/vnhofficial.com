@@ -2,8 +2,12 @@
 import '../styles/global.css';
 import '../styles/accessibility.css';
 import '../styles/theme-fix.css';
+import { getSiteMedia } from '../lib/sanity';
 
 const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, solutions, ideas, and freedom.' } = Astro.props;
+const siteMedia = await getSiteMedia();
+const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
+const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
 ---
 <!doctype html>
 <html lang="en">
@@ -12,14 +16,14 @@ const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, soluti
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#030405" />
-    <link rel="icon" href="/vnh-logo-clean.svg" type="image/svg+xml" />
+    <link rel="icon" href={logoSrc} />
     <title>{title}</title>
   </head>
-  <body>
+  <body style={`--vnh-topo-image:url("${topoSrc}")`}>
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="/" aria-label="VNH home">
-          <img class="brand-mark" src="/vnh-logo-clean.svg" alt="" />
+          <img class="brand-mark" src={logoSrc} alt="" />
           <div class="brand-lockup">
             <div class="brand-word">VNH</div>
             <div class="brand-tag">REAL PEOPLE. REAL PURPOSE.</div>
@@ -40,7 +44,7 @@ const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, soluti
     <main><slot /></main>
     <footer class="site-footer">
       <div class="container footer-inner">
-        <div class="footer-brand"><img src="/vnh-logo-clean.svg" alt="" /><span>VNH</span></div>
+        <div class="footer-brand"><img src={logoSrc} alt="" /><span>VNH</span></div>
         <div>© {new Date().getFullYear()} VNH. Real People. Real Purpose.</div>
         <div class="footer-links"><a href="/shop">Shop</a><a href="/mission">Mission</a><a href="/contact">Contact</a></div>
       </div>
