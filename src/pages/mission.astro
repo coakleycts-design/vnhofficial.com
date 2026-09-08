@@ -1,20 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getMissionPage } from '../lib/sanity';
+
+const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const mission = await getMissionPage(runtimeEnv);
+const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
+const seoTitle = text(mission.seoTitle, 'VNH Mission | Freedom Through Action');
+const seoDescription = text(mission.seoDescription, 'Learn why VNH focuses on practical products, useful ideas, personal responsibility, and freedom through action.');
+const eyebrow = text(mission.eyebrow, 'Our Mission');
+const heading = text(mission.heading, 'Freedom Through Action');
+const intro = text(mission.intro, 'Real people. Real purpose. Useful ideas, personal responsibility, and practical solutions.');
+const paragraph1 = text(mission.paragraph1, 'VNH exists to create practical products, useful solutions, and original ideas for people who value freedom and responsibility.');
+const paragraph2 = text(mission.paragraph2, 'We are building this site as a place to discover new products, explore ideas, and stay up to date as VNH grows. The mission page will expand as the brand story and future programs are finalized.');
+const ctaLabel = text(mission.ctaLabel, 'Keep Updated');
 ---
-<BaseLayout
-  title="VNH Mission | Freedom Through Action"
-  description="Learn why VNH focuses on practical products, useful ideas, personal responsibility, and freedom through action."
->
+<BaseLayout title={seoTitle} description={seoDescription}>
   <section class="page-hero">
     <div class="container">
-      <div class="eyebrow">Our Mission</div>
-      <h1 class="display">Freedom Through Action</h1>
-      <p>Real people. Real purpose. Useful ideas, personal responsibility, and practical solutions.</p>
+      <div class="eyebrow">{eyebrow}</div>
+      <h1 class="display">{heading}</h1>
+      <p>{intro}</p>
     </div>
   </section>
   <section class="container page-copy">
-    <p>VNH exists to create practical products, useful solutions, and original ideas for people who value freedom and responsibility.</p>
-    <p>We are building this site as a place to discover new products, explore ideas, and stay up to date as VNH grows. The mission page will expand as the brand story and future programs are finalized.</p>
-    <a class="button" href="/#keep-updated">Keep Updated →</a>
+    <p>{paragraph1}</p>
+    <p>{paragraph2}</p>
+    <a class="button" href="/#keep-updated">{ctaLabel} →</a>
   </section>
 </BaseLayout>
