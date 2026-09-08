@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import newCoinFallback from '../assets/newcoin.jpg?inline';
+import newCoinBase64 from '../assets/newcoin-fallback.b64.txt?raw';
 import { stickersFallbackSrc } from '../assets/product-stickers-inline';
 import { getHomeMedia, getSiteMedia } from '../lib/sanity';
 import '../styles/home.css';
@@ -8,9 +8,11 @@ import '../styles/home-fix.css';
 import '../styles/final-home.css';
 
 const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(), getSiteMedia()]);
-const latestLeftSrc = homeMedia.latestLeftUrl || newCoinFallback;
-const latestRightSrc = homeMedia.latestRightUrl || stickersFallbackSrc;
-const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
+const newCoinFallback = `data:image/jpeg;base64,${newCoinBase64.replace(/\s+/g, '')}`;
+const validSanityImage = (value?: string) => Boolean(value && /^https:\/\/cdn\.sanity\.io\/images\//.test(value));
+const latestLeftSrc = validSanityImage(homeMedia.latestLeftUrl) ? homeMedia.latestLeftUrl! : newCoinFallback;
+const latestRightSrc = validSanityImage(homeMedia.latestRightUrl) ? homeMedia.latestRightUrl! : stickersFallbackSrc;
+const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh-logo-clean.svg';
 ---
 <BaseLayout>
   <section class="hero">
