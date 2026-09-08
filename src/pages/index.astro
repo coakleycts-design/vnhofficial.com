@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import newCoinBase64 from '../assets/newcoin-fallback.b64.txt?raw';
+import newCoin0 from '../assets/newcoin-fallback-00.txt?raw';
+import newCoin1 from '../assets/newcoin-fallback-01.txt?raw';
+import newCoin2 from '../assets/newcoin-fallback-02.txt?raw';
 import { stickersFallbackSrc } from '../assets/product-stickers-inline';
 import { getHomeMedia, getSiteMedia } from '../lib/sanity';
 import '../styles/home.css';
@@ -8,7 +10,11 @@ import '../styles/home-fix.css';
 import '../styles/final-home.css';
 
 const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(), getSiteMedia()]);
-const newCoinFallback = `data:image/jpeg;base64,${newCoinBase64.replace(/\s+/g, '')}`;
+const newCoinBase64 = `${newCoin0}${newCoin1}${newCoin2}`.replace(/\s+/g, '');
+if (newCoinBase64.length !== 16300 || !newCoinBase64.startsWith('/9j/') || !newCoinBase64.endsWith('/2Q==')) {
+  throw new Error(`Invalid bundled NewCoin fallback (${newCoinBase64.length} chars)`);
+}
+const newCoinFallback = `data:image/jpeg;base64,${newCoinBase64}`;
 const validSanityImage = (value?: string) => Boolean(value && /^https:\/\/cdn\.sanity\.io\/images\//.test(value));
 const latestLeftSrc = validSanityImage(homeMedia.latestLeftUrl) ? homeMedia.latestLeftUrl! : newCoinFallback;
 const latestRightSrc = validSanityImage(homeMedia.latestRightUrl) ? homeMedia.latestRightUrl! : stickersFallbackSrc;
