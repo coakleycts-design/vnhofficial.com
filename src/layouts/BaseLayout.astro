@@ -4,19 +4,84 @@ import '../styles/accessibility.css';
 import '../styles/theme-fix.css';
 import { getSiteMedia } from '../lib/sanity';
 
-const { title = 'VNH | Real People. Real Purpose.', description = 'Parts, solutions, ideas, and freedom.' } = Astro.props;
+const {
+  title = 'VNH | Parts, Solutions, Ideas & Freedom',
+  description = 'VNH creates practical products, useful solutions, and original ideas for people who value freedom and personal responsibility.',
+  canonical,
+  noindex = false,
+  ogType = 'website',
+  socialImage,
+  structuredData
+} = Astro.props;
+
 const siteMedia = await getSiteMedia();
 const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
 const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
+const siteOrigin = Astro.site ?? new URL('https://vnhofficial.com');
+const canonicalUrl = canonical ? new URL(canonical, siteOrigin).toString() : new URL(Astro.url.pathname, siteOrigin).toString();
+const socialImageUrl = socialImage ? new URL(socialImage, siteOrigin).toString() : undefined;
+
+const defaultStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'VNH',
+    url: siteOrigin.toString(),
+    logo: new URL(logoSrc, siteOrigin).toString(),
+    slogan: 'Real People. Real Purpose.'
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'VNH',
+    url: siteOrigin.toString(),
+    description: 'Parts, solutions, ideas, and freedom.'
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url: canonicalUrl,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'VNH',
+      url: siteOrigin.toString()
+    }
+  }
+];
+
+const jsonLd = structuredData
+  ? [...defaultStructuredData, ...(Array.isArray(structuredData) ? structuredData : [structuredData])]
+  : defaultStructuredData;
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
     <meta name="theme-color" content="#030405" />
+
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="icon" href={logoSrc} />
+
+    <meta property="og:site_name" content="VNH" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
+
+    <meta name="twitter:card" content={socialImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <title>{title}</title>
   </head>
   <body style={`--vnh-topo-image:url("${topoSrc}")`}>
@@ -35,7 +100,7 @@ const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
           <a href="/contact">Contact</a>
         </nav>
         <div class="header-actions" aria-label="Site actions">
-          <a class="icon-button" href="/shop" aria-label="Search shop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
+          <a class="icon-button" href="/shop" aria-label="Browse shop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
           <a class="icon-button" href="/shop" aria-label="Account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
           <a class="icon-button" href="/shop" aria-label="Cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></a>
         </div>
