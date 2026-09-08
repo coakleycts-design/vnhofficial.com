@@ -1,0 +1,1 @@
+Trigger Cloudflare rebuild for VNH Sanity Studio after reconnecting the GitHub repository.
