@@ -14,15 +14,16 @@ const {
   structuredData
 } = Astro.props;
 
-const siteMedia = await getSiteMedia();
+const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const siteMedia = await getSiteMedia(runtimeEnv);
 const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
 const topoSrc = siteMedia.topoUrl || '/vnh-topo-simple.svg';
 const siteOrigin = Astro.site ?? new URL('https://vnhofficial.com');
 const canonicalUrl = canonical ? new URL(canonical, siteOrigin).toString() : new URL(Astro.url.pathname, siteOrigin).toString();
 const socialImageSource = socialImage || siteMedia.socialShareUrl;
 const socialImageUrl = socialImageSource ? new URL(socialImageSource, siteOrigin).toString() : undefined;
-const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
-const bingSiteVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION;
+const googleSiteVerification = runtimeEnv.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const bingSiteVerification = runtimeEnv.PUBLIC_BING_SITE_VERIFICATION;
 
 const defaultStructuredData = [
   {
