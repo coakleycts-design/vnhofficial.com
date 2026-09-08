@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import newCoinFallback from '../assets/newcoin.jpg?inline';
+import { stickersFallbackSrc } from '../assets/product-stickers-inline';
 import { getHomeMedia, getSiteMedia } from '../lib/sanity';
 import '../styles/home.css';
 import '../styles/home-fix.css';
@@ -8,7 +9,7 @@ import '../styles/final-home.css';
 
 const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(), getSiteMedia()]);
 const latestLeftSrc = homeMedia.latestLeftUrl || newCoinFallback;
-const latestRightSrc = homeMedia.latestRightUrl || '/product-stickers.webp?v=2';
+const latestRightSrc = homeMedia.latestRightUrl || stickersFallbackSrc;
 const logoSrc = siteMedia.logoUrl || '/vnh-logo-clean.svg';
 ---
 <BaseLayout>
