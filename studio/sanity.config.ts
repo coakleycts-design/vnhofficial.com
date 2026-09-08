@@ -3,10 +3,8 @@ import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
 
-const projectId = process.env.SANITY_STUDIO_PROJECT_ID
+const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'iec4sn1b'
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
-
-if (!projectId) throw new Error('SANITY_STUDIO_PROJECT_ID is required')
 
 const singletonTypes = new Set(['siteSettings', 'homePage'])
 
