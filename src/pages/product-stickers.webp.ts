@@ -1,4 +1,4 @@
-import stickerB64 from '../assets/product-stickers.b64.txt?raw';
+import stickerB64 from '../assets/product-stickers-small.b64.txt?raw';
 
 export const prerender = false;
 
