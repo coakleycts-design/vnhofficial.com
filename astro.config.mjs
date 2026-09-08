@@ -6,5 +6,6 @@ export default defineConfig({
   integrations: [react()],
   adapter: cloudflare(),
   output: 'server',
-  site: 'https://vnhofficial.com'
+  site: 'https://vnhofficial.com',
+  trailingSlash: 'never'
 });
