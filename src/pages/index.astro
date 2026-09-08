@@ -4,27 +4,65 @@ import newCoin0 from '../assets/newcoin-fallback-00.txt?raw';
 import newCoin1 from '../assets/newcoin-fallback-01.txt?raw';
 import newCoin2 from '../assets/newcoin-fallback-02.txt?raw';
 import { stickersFallbackSrc } from '../assets/product-stickers-inline';
-import { getHomeMedia, getSiteMedia } from '../lib/sanity';
+import { getHomePage, getSiteSettings } from '../lib/sanity';
 import '../styles/home.css';
 import '../styles/home-fix.css';
 import '../styles/final-home.css';
 
 const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
-const [homeMedia, siteMedia] = await Promise.all([getHomeMedia(runtimeEnv), getSiteMedia(runtimeEnv)]);
+const [home, site] = await Promise.all([getHomePage(runtimeEnv), getSiteSettings(runtimeEnv)]);
+const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
+
 const newCoinBase64 = `${newCoin0}${newCoin1}${newCoin2}`.replace(/\s+/g, '');
 if (newCoinBase64.length !== 16300 || !newCoinBase64.startsWith('/9j/') || !newCoinBase64.endsWith('/2Q==')) {
   throw new Error(`Invalid bundled NewCoin fallback (${newCoinBase64.length} chars)`);
 }
 const newCoinFallback = `data:image/jpeg;base64,${newCoinBase64}`;
 const validSanityImage = (value?: string) => Boolean(value && /^https:\/\/cdn\.sanity\.io\/images\//.test(value));
-const latestLeftSrc = validSanityImage(homeMedia.latestLeftUrl) ? homeMedia.latestLeftUrl! : newCoinFallback;
-const latestRightSrc = validSanityImage(homeMedia.latestRightUrl) ? homeMedia.latestRightUrl! : stickersFallbackSrc;
-const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh-logo-clean.svg';
+const latestLeftSrc = validSanityImage(home.latestLeftUrl) ? home.latestLeftUrl! : newCoinFallback;
+const latestRightSrc = validSanityImage(home.latestRightUrl) ? home.latestRightUrl! : stickersFallbackSrc;
+const logoSrc = validSanityImage(site.logoUrl) ? site.logoUrl! : '/vnh-logo-clean.svg';
+
+const seoTitle = text(home.seoTitle, 'VNH | Parts, Solutions, Ideas & Freedom');
+const seoDescription = text(home.seoDescription, 'VNH creates practical products, useful solutions, and original ideas for people who value freedom and personal responsibility.');
+const heroLine1 = text(home.heroLine1, 'Parts');
+const heroLine2 = text(home.heroLine2, 'Solutions');
+const heroLine3 = text(home.heroLine3, 'Ideas');
+const heroLine4 = text(home.heroLine4, 'Freedom');
+const heroTaglineLine1 = text(home.heroTaglineLine1, 'Real People.');
+const heroTaglineLine2 = text(home.heroTaglineLine2, 'Real Purpose.');
+const heroButtonLabel = text(home.heroButtonLabel, 'Explore the Shop');
+const value1Title = text(home.value1Title, 'Quality Parts');
+const value1Subtitle = text(home.value1Subtitle, 'Built to last');
+const value2Title = text(home.value2Title, 'Real Solutions');
+const value2Subtitle = text(home.value2Subtitle, 'For everyday challenges');
+const value3Title = text(home.value3Title, 'A Bigger Purpose');
+const value3Subtitle = text(home.value3Subtitle, 'More than a purchase');
+const missionEyebrow = text(home.missionEyebrow, 'Our Mission');
+const missionHeading = text(home.missionHeading, 'Freedom Through Action');
+const missionButtonLabel = text(home.missionButtonLabel, 'Learn More');
+const missionSideLine1 = text(home.missionSideLine1, 'Parts');
+const missionSideLine2 = text(home.missionSideLine2, 'Solutions');
+const missionSideLine3 = text(home.missionSideLine3, 'Ideas');
+const missionSideLine4 = text(home.missionSideLine4, 'Freedom');
+const signupEyebrow = text(home.signupEyebrow, 'Keep Updated');
+const signupHeading = text(home.signupHeading, 'Stay in the Loop');
+const signupBody = text(home.signupBody, 'Get the latest on new products, updates, exclusive releases, and more.');
+const signupEmailPlaceholder = text(home.signupEmailPlaceholder, 'Enter your email address');
+const signupButtonLabel = text(home.signupButtonLabel, 'Keep Me Updated');
+const signupNote = text(home.signupNote, 'No spam. Just what matters.');
+const signupSending = text(home.signupSending, 'Signing you up…');
+const signupSuccess = text(home.signupSuccess, 'You’re on the list. Watch your inbox.');
+const signupError = text(home.signupError, 'Something went wrong. Please try again.');
+const signupSideLine1 = text(home.signupSideLine1, 'Ideas Today');
+const signupSideLine2 = text(home.signupSideLine2, 'A Stronger');
+const signupSideLine3 = text(home.signupSideLine3, 'Tomorrow');
+const shopEyebrow = text(home.shopEyebrow, 'Shop');
+const shopHeading = text(home.shopHeading, 'Latest from VNH');
+const latestLeftAlt = text(home.latestLeftAlt, 'VNH 3D printed model');
+const latestRightAlt = text(home.latestRightAlt, 'VNH sticker collection');
 ---
-<BaseLayout
-  title="VNH | Parts, Solutions, Ideas & Freedom"
-  description="VNH creates practical products, useful solutions, and original ideas for people who value freedom and personal responsibility."
->
+<BaseLayout title={seoTitle} description={seoDescription}>
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-logo-panel">
@@ -32,18 +70,18 @@ const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh
       </div>
 
       <div class="hero-copy">
-        <h1 class="display hero-words">Parts<br/>Solutions<br/>Ideas<br/>Freedom</h1>
-        <div class="hero-tagline">Real People.<br/>Real Purpose.</div>
-        <a class="button hero-button" href="/shop">Explore the Shop <span>→</span></a>
+        <h1 class="display hero-words">{heroLine1}<br/>{heroLine2}<br/>{heroLine3}<br/>{heroLine4}</h1>
+        <div class="hero-tagline">{heroTaglineLine1}<br/>{heroTaglineLine2}</div>
+        <a class="button hero-button" href="/shop">{heroButtonLabel} <span>→</span></a>
       </div>
     </div>
   </section>
 
   <section class="value-strip" aria-label="VNH values">
     <div class="container value-grid">
-      <div class="value"><div class="value-icon">⚙</div><strong>Quality Parts</strong><span>Built to last</span></div>
-      <div class="value"><div class="value-icon">◯</div><strong>Real Solutions</strong><span>For everyday challenges</span></div>
-      <div class="value"><div class="value-icon">☆</div><strong>A Bigger Purpose</strong><span>More than a purchase</span></div>
+      <div class="value"><div class="value-icon">⚙</div><strong>{value1Title}</strong><span>{value1Subtitle}</span></div>
+      <div class="value"><div class="value-icon">◯</div><strong>{value2Title}</strong><span>{value2Subtitle}</span></div>
+      <div class="value"><div class="value-icon">☆</div><strong>{value3Title}</strong><span>{value3Subtitle}</span></div>
     </div>
   </section>
 
@@ -51,28 +89,34 @@ const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh
     <div class="container mission-inner">
       <div class="mission-person" aria-hidden="true"></div>
       <div class="mission-copy">
-        <div class="eyebrow">Our Mission</div>
-        <h2 class="display">Freedom Through Action</h2>
-        <a class="button" href="/mission">Learn More <span>→</span></a>
+        <div class="eyebrow">{missionEyebrow}</div>
+        <h2 class="display">{missionHeading}</h2>
+        <a class="button" href="/mission">{missionButtonLabel} <span>→</span></a>
       </div>
-      <div class="mission-sideword" aria-hidden="true">Parts<br/>Solutions<br/>Ideas<br/>Freedom</div>
+      <div class="mission-sideword" aria-hidden="true">{missionSideLine1}<br/>{missionSideLine2}<br/>{missionSideLine3}<br/>{missionSideLine4}</div>
     </div>
   </section>
 
   <section class="signup" id="keep-updated">
     <div class="container signup-inner">
       <div>
-        <div class="eyebrow">Keep Updated</div>
-        <h2 class="display">Stay in the Loop</h2>
-        <p>Get the latest on new products, updates, exclusive releases, and more.</p>
+        <div class="eyebrow">{signupEyebrow}</div>
+        <h2 class="display">{signupHeading}</h2>
+        <p>{signupBody}</p>
       </div>
-      <form class="signup-form" id="signup-form">
+      <form
+        class="signup-form"
+        id="signup-form"
+        data-sending={signupSending}
+        data-success={signupSuccess}
+        data-error={signupError}
+      >
         <label class="sr-only" for="email">Email address</label>
-        <input id="email" name="email" type="email" placeholder="Enter your email address" required />
-        <button class="button primary" type="submit">Keep Me Updated <span>→</span></button>
-        <div class="form-note" id="signup-status">No spam. Just what matters.</div>
+        <input id="email" name="email" type="email" placeholder={signupEmailPlaceholder} required />
+        <button class="button primary" type="submit">{signupButtonLabel} <span>→</span></button>
+        <div class="form-note" id="signup-status">{signupNote}</div>
       </form>
-      <div class="signup-sideword" aria-hidden="true">Ideas Today<br/>A Stronger<br/>Tomorrow</div>
+      <div class="signup-sideword" aria-hidden="true">{signupSideLine1}<br/>{signupSideLine2}<br/>{signupSideLine3}</div>
     </div>
   </section>
 
@@ -80,18 +124,18 @@ const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh
     <div class="container">
       <div class="section-head shop-feature-head">
         <div>
-          <div class="eyebrow">Shop</div>
-          <h2 class="display">Latest from VNH</h2>
+          <div class="eyebrow">{shopEyebrow}</div>
+          <h2 class="display">{shopHeading}</h2>
         </div>
       </div>
 
       <a class="product-showcase-link" href="/shop" aria-label="Shop all VNH products">
         <div class="product-showcase">
           <div class="product-photo product-photo-model">
-            <img src={latestLeftSrc} alt="VNH 3D printed model" loading="eager" />
+            <img src={latestLeftSrc} alt={latestLeftAlt} loading="eager" />
           </div>
           <div class="product-photo product-photo-stickers">
-            <img src={latestRightSrc} alt="VNH sticker collection" loading="lazy" />
+            <img src={latestRightSrc} alt={latestRightAlt} loading="lazy" />
           </div>
         </div>
       </a>
@@ -106,7 +150,10 @@ const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh
       const emailInput = document.querySelector('#email');
       const email = emailInput instanceof HTMLInputElement ? emailInput.value.trim() : '';
       if (!email) return;
-      if (status) status.textContent = 'Signing you up…';
+      const sendingMessage = form instanceof HTMLElement ? form.dataset.sending || 'Signing you up…' : 'Signing you up…';
+      const successMessage = form instanceof HTMLElement ? form.dataset.success || 'You’re on the list. Watch your inbox.' : 'You’re on the list. Watch your inbox.';
+      const errorMessage = form instanceof HTMLElement ? form.dataset.error || 'Something went wrong. Please try again.' : 'Something went wrong. Please try again.';
+      if (status) status.textContent = sendingMessage;
       try {
         const response = await fetch('/api/subscribe', {
           method: 'POST',
@@ -114,11 +161,11 @@ const logoSrc = validSanityImage(siteMedia.logoUrl) ? siteMedia.logoUrl! : '/vnh
           body: JSON.stringify({ email })
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data?.error || 'Unable to subscribe');
-        if (status) status.textContent = 'You’re on the list. Watch your inbox.';
+        if (!response.ok) throw new Error(data?.error || errorMessage);
+        if (status) status.textContent = successMessage;
         if (form instanceof HTMLFormElement) form.reset();
       } catch (error) {
-        if (status) status.textContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+        if (status) status.textContent = error instanceof Error ? error.message : errorMessage;
       }
     });
   </script>
