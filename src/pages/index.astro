@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { modelCardSrc } from '../assets/product-model-card-320x260-inline';
 import '../styles/home.css';
 import '../styles/home-fix.css';
 import '../styles/final-home.css';
@@ -68,7 +69,7 @@ import '../styles/final-home.css';
       <a class="product-showcase-link" href="/shop" aria-label="Shop all VNH products">
         <div class="product-showcase">
           <div class="product-photo product-photo-model">
-            <img src="/product-model-card-320x260.jpg?v=1" alt="VNH 3D printed model" loading="lazy" width="320" height="260" />
+            <img src={modelCardSrc} alt="VNH 3D printed model" loading="eager" width="320" height="260" />
           </div>
           <div class="product-photo product-photo-stickers">
             <img src="/product-stickers.webp?v=2" alt="VNH sticker collection" loading="lazy" />
