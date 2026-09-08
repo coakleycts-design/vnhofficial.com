@@ -14,14 +14,13 @@ export type SanityEnvironment = {
   PUBLIC_SANITY_DATASET?: string;
 };
 
+const defaultProjectId = 'iec4sn1b';
 const apiVersion = '2025-02-19';
 
 async function sanityQuery<T>(query: string, environment?: SanityEnvironment): Promise<T | null> {
   const env = environment ?? import.meta.env;
-  const projectId = env.PUBLIC_SANITY_PROJECT_ID;
+  const projectId = env.PUBLIC_SANITY_PROJECT_ID || defaultProjectId;
   const dataset = env.PUBLIC_SANITY_DATASET || 'production';
-
-  if (!projectId) return null;
 
   const url = `https://${projectId}.apicdn.sanity.io/v${apiVersion}/data/query/${dataset}?query=${encodeURIComponent(query)}`;
 
