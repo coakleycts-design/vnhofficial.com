@@ -19,6 +19,9 @@ export type ShopifyProduct = {
   title: string;
   description: string;
   availableForSale: boolean;
+  vendor?: string | null;
+  productType?: string | null;
+  createdAt?: string | null;
   featuredImage?: ShopifyImage | null;
   priceRange: {
     minVariantPrice: ShopifyMoney;
@@ -47,8 +50,6 @@ export type ShopifyVariant = {
 
 export type ShopifyProductDetail = ShopifyProduct & {
   descriptionHtml: string;
-  vendor?: string | null;
-  productType?: string | null;
   images: { nodes: ShopifyImage[] };
   options: ShopifyProductOption[];
   variants: { nodes: ShopifyVariant[] };
@@ -111,6 +112,9 @@ const PRODUCTS_QUERY = `#graphql
         title
         description
         availableForSale
+        vendor
+        productType
+        createdAt
         featuredImage {
           url
           altText
@@ -141,6 +145,7 @@ const PRODUCT_QUERY = `#graphql
       availableForSale
       vendor
       productType
+      createdAt
       featuredImage {
         url
         altText
