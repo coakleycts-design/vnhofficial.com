@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getShopifyProduct, shopifyProductUrl, type ShopifyMoney, type ShopifyProductDetail, type ShopifyVariant } from '../../lib/shopify';
+import { getShopifyProduct, type ShopifyMoney, type ShopifyProductDetail } from '../../lib/shopify';
 
 const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>;
 const buyerIp = Astro.request.headers.get('CF-Connecting-IP');
@@ -29,11 +29,9 @@ const money = (value?: ShopifyMoney | null) => {
 };
 
 const selectedVariant = product?.variants.nodes.find((variant) => variant.availableForSale) || product?.variants.nodes[0] || null;
-const variantNumericId = (variant?: ShopifyVariant | null) => variant?.id?.split('/').pop() || '';
-const purchaseUrl = selectedVariant
-  ? `${shopifyProductUrl(product!.handle)}?variant=${encodeURIComponent(variantNumericId(selectedVariant))}`
-  : product ? shopifyProductUrl(product.handle) : `https://vnhofficial.myshopify.com/products/${encodeURIComponent(handle)}`;
-
+const selectedCompare = selectedVariant?.compareAtPrice && Number(selectedVariant.compareAtPrice.amount) > Number(selectedVariant.price.amount)
+  ? money(selectedVariant.compareAtPrice)
+  : '';
 const seoTitle = product?.seo?.title?.trim() || (product ? `${product.title} | VNH Engineered Design` : 'Product | VNH Engineered Design');
 const seoDescription = product?.seo?.description?.trim() || product?.description?.trim() || 'Shop VNH Engineered Design products.';
 const images = product?.images?.nodes?.length ? product.images.nodes : product?.featuredImage ? [product.featuredImage] : [];
@@ -82,15 +80,13 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
         <div class="product-info">
           <div class="eyebrow">{product.productType || 'VNH Product'}</div>
           <h1 class="display">{product.title}</h1>
-          <div class:list={['availability', product.availableForSale ? 'available' : 'unavailable']}>
-            {product.availableForSale ? 'Available' : 'Currently unavailable'}
+          <div class:list={['availability', selectedVariant?.availableForSale ? 'available' : 'unavailable']} data-availability>
+            {selectedVariant?.availableForSale ? 'Available' : 'Currently unavailable'}
           </div>
 
           {selectedVariant && (
             <div class="price-row" aria-live="polite">
-              {selectedVariant.compareAtPrice && Number(selectedVariant.compareAtPrice.amount) > Number(selectedVariant.price.amount) && (
-                <span class="compare-price" data-compare-price>{money(selectedVariant.compareAtPrice)}</span>
-              )}
+              <span class="compare-price" data-compare-price hidden={!selectedCompare}>{selectedCompare}</span>
               <strong data-current-price>{money(selectedVariant.price)}</strong>
             </div>
           )}
@@ -105,9 +101,7 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
                     data-price={money(variant.price)}
                     data-compare={variant.compareAtPrice && Number(variant.compareAtPrice.amount) > Number(variant.price.amount) ? money(variant.compareAtPrice) : ''}
                     data-available={variant.availableForSale ? 'true' : 'false'}
-                    data-purchase-url={`${shopifyProductUrl(product.handle)}?variant=${encodeURIComponent(variantNumericId(variant))}`}
                     selected={variant.id === selectedVariant?.id}
-                    disabled={!variant.availableForSale}
                   >
                     {variant.title}{!variant.availableForSale ? ' — Sold out' : ''}
                   </option>
@@ -118,20 +112,28 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
 
           <div class="description" set:html={product.descriptionHtml || product.description}></div>
 
-          <div class="purchase-actions">
-            <a
-              class:list={['purchase-button', !product.availableForSale && 'is-disabled']}
-              href={product.availableForSale ? purchaseUrl : undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-disabled={!product.availableForSale ? 'true' : undefined}
-              data-purchase-button
+          <div class="buy-box">
+            <label class="quantity-field">
+              <span>Quantity</span>
+              <input type="number" min="1" max="99" step="1" value="1" inputmode="numeric" data-quantity />
+            </label>
+            <button
+              class:list={['purchase-button', !selectedVariant?.availableForSale && 'is-disabled']}
+              type="button"
+              data-add-to-cart
+              data-variant-id={selectedVariant?.id || ''}
+              disabled={!selectedVariant?.availableForSale}
             >
-              {product.availableForSale ? 'Purchase securely' : 'Currently unavailable'}
-            </a>
-            <a class="back-link" href="/shop">Back to shop</a>
+              {selectedVariant?.availableForSale ? 'Add to cart' : 'Currently unavailable'}
+            </button>
           </div>
-          <p class="checkout-note">Product details stay here on VNH. Secure checkout is completed through Shopify.</p>
+
+          <div class="cart-feedback" data-cart-feedback aria-live="polite"></div>
+          <div class="purchase-actions">
+            <a class="back-link" href="/shop">Continue shopping</a>
+            <a class="back-link" href="/cart">View cart</a>
+          </div>
+          <p class="checkout-note">Add products to your VNH cart here. Shopify only takes over when you choose Checkout.</p>
         </div>
       </section>
     </main>
@@ -143,7 +145,6 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
         <p>{errorMessage || 'We could not find that product.'}</p>
         <div class="purchase-actions">
           <a class="purchase-button" href="/shop">Return to shop</a>
-          <a class="back-link" href={`https://vnhofficial.myshopify.com/products/${encodeURIComponent(handle)}`} target="_blank" rel="noopener noreferrer">Try Shopify</a>
         </div>
       </section>
     </main>
@@ -158,16 +159,18 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
   .gallery-thumbs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:12px}.gallery-thumb{appearance:none;padding:0;aspect-ratio:1/1;border:1px solid rgba(255,255,255,.14);background:#0c0d0f;cursor:pointer;overflow:hidden}.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block}.gallery-thumb.is-active{border-color:#fff}.gallery-thumb:focus-visible{outline:2px solid #fff;outline-offset:2px}
   .product-info{padding-top:8px}.product-info h1{font-size:clamp(2.5rem,5vw,5.3rem);line-height:.95;margin:.4rem 0 14px}.availability{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#adb5bc}.availability.available{color:#d9e2da}.availability.unavailable{color:#d5b1a1}
   .price-row{display:flex;align-items:baseline;gap:12px;margin:24px 0}.price-row strong{font-size:clamp(1.55rem,3vw,2.25rem)}.compare-price{text-decoration:line-through;color:#8f979f;font-size:1rem}
-  .variant-picker{display:grid;gap:8px;margin:0 0 24px}.variant-picker label{font:700 .72rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase}.variant-picker select{width:100%;min-height:48px;padding:10px 42px 10px 12px;background:#111417;color:#fff;border:1px solid rgba(255,255,255,.25);font:inherit;font-size:16px}
+  .variant-picker{display:grid;gap:8px;margin:0 0 24px}.variant-picker label,.quantity-field span{font:700 .72rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase}.variant-picker select,.quantity-field input{min-height:48px;background:#111417;color:#fff;border:1px solid rgba(255,255,255,.25);font:inherit;font-size:16px}.variant-picker select{width:100%;padding:10px 42px 10px 12px}.quantity-field{display:grid;gap:8px}.quantity-field input{width:86px;padding:10px 12px;box-sizing:border-box}
   .description{color:#c7ccd0;line-height:1.75;font-size:1rem}.description :global(p){margin:0 0 1rem}.description :global(ul),.description :global(ol){padding-left:1.25rem}.description :global(h2),.description :global(h3){color:#fff;font-family:Oxanium,sans-serif;margin:1.5rem 0 .65rem}
-  .purchase-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:30px}.purchase-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 22px;background:#fff;color:#0b0d0f;text-decoration:none;font:800 .76rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase;border:1px solid #fff}.purchase-button:hover,.purchase-button:focus-visible{background:transparent;color:#fff}.purchase-button.is-disabled{pointer-events:none;opacity:.45}.back-link{color:#c5cbd0;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:3px}.back-link:hover,.back-link:focus-visible{color:#fff;border-color:#fff}.checkout-note{margin-top:16px;color:#879099;font-size:.78rem;line-height:1.5}
+  .buy-box{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin-top:30px}.purchase-button{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 26px;background:#fff;color:#0b0d0f;text-decoration:none;font:800 .76rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase;border:1px solid #fff;cursor:pointer}.purchase-button:hover,.purchase-button:focus-visible{background:transparent;color:#fff}.purchase-button.is-disabled,.purchase-button:disabled{pointer-events:none;opacity:.45}.purchase-button.is-loading{opacity:.7;cursor:wait}.purchase-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:18px}.back-link{color:#c5cbd0;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:3px}.back-link:hover,.back-link:focus-visible{color:#fff;border-color:#fff}.checkout-note{margin-top:16px;color:#879099;font-size:.78rem;line-height:1.5}.cart-feedback{min-height:24px;margin-top:12px;font-size:.82rem;color:#d9e2da}.cart-feedback.is-error{color:#e5a998}
   .product-error{max-width:760px;padding:clamp(42px,7vw,82px) 0}.product-error h1{margin:.5rem 0 18px}.product-error p{color:#c7ccd0;line-height:1.7}
   @media(max-width:900px){.product-layout{grid-template-columns:1fr}.product-info{padding-top:0}.gallery-thumbs{grid-template-columns:repeat(5,minmax(0,1fr))}}
-  @media(max-width:560px){.product-page{padding-top:20px}.gallery-thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}.purchase-actions{align-items:stretch;flex-direction:column}.purchase-button,.back-link{width:100%;box-sizing:border-box;text-align:center}.product-info h1{font-size:clamp(2.3rem,12vw,3.5rem)}}
+  @media(max-width:560px){.product-page{padding-top:20px}.gallery-thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}.buy-box{align-items:stretch;flex-direction:column}.quantity-field input,.purchase-button{width:100%}.purchase-actions{align-items:flex-start;flex-direction:column}.product-info h1{font-size:clamp(2.3rem,12vw,3.5rem)}}
 </style>
 
 <script is:inline>
 (() => {
+  const CART_ID_KEY = 'vnh:shopify-cart-id';
+  const CART_COUNT_KEY = 'vnh:cart-count';
   const root = document.querySelector('[data-product-page]');
   if (!root) return;
 
@@ -189,29 +192,89 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
   const select = root.querySelector('[data-variant-select]');
   const price = root.querySelector('[data-current-price]');
   const compare = root.querySelector('[data-compare-price]');
-  const purchase = root.querySelector('[data-purchase-button]');
-  if (select instanceof HTMLSelectElement && purchase instanceof HTMLAnchorElement) {
-    const updateVariant = () => {
-      const option = select.selectedOptions[0];
-      if (!option) return;
+  const availability = root.querySelector('[data-availability]');
+  const addButton = root.querySelector('[data-add-to-cart]');
+  const quantityInput = root.querySelector('[data-quantity]');
+  const feedback = root.querySelector('[data-cart-feedback]');
+
+  const setFeedback = (message, isError = false) => {
+    if (!(feedback instanceof HTMLElement)) return;
+    feedback.textContent = message;
+    feedback.classList.toggle('is-error', isError);
+  };
+
+  const applyVariant = () => {
+    if (!(addButton instanceof HTMLButtonElement)) return;
+    const option = select instanceof HTMLSelectElement ? select.selectedOptions[0] : null;
+    if (option) {
       if (price) price.textContent = option.dataset.price || '';
       if (compare) {
         compare.textContent = option.dataset.compare || '';
         compare.toggleAttribute('hidden', !option.dataset.compare);
       }
       const available = option.dataset.available === 'true';
-      purchase.classList.toggle('is-disabled', !available);
-      purchase.setAttribute('aria-disabled', available ? 'false' : 'true');
-      if (available && option.dataset.purchaseUrl) {
-        purchase.href = option.dataset.purchaseUrl;
-        purchase.textContent = 'Purchase securely';
-      } else {
-        purchase.removeAttribute('href');
-        purchase.textContent = 'Currently unavailable';
+      addButton.dataset.variantId = option.value;
+      addButton.disabled = !available;
+      addButton.classList.toggle('is-disabled', !available);
+      addButton.textContent = available ? 'Add to cart' : 'Currently unavailable';
+      if (availability) {
+        availability.textContent = available ? 'Available' : 'Currently unavailable';
+        availability.classList.toggle('available', available);
+        availability.classList.toggle('unavailable', !available);
       }
-    };
-    select.addEventListener('change', updateVariant);
-    updateVariant();
+      setFeedback('');
+    }
+  };
+
+  if (select instanceof HTMLSelectElement) {
+    select.addEventListener('change', applyVariant);
+    applyVariant();
+  }
+
+  if (addButton instanceof HTMLButtonElement) {
+    addButton.addEventListener('click', async () => {
+      const merchandiseId = addButton.dataset.variantId || '';
+      const quantity = quantityInput instanceof HTMLInputElement ? Math.max(1, Math.min(99, Number(quantityInput.value) || 1)) : 1;
+      if (!merchandiseId) return;
+
+      addButton.disabled = true;
+      addButton.classList.add('is-loading');
+      addButton.textContent = 'Adding…';
+      setFeedback('');
+
+      try {
+        const response = await fetch('/api/shopify/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'add',
+            cartId: localStorage.getItem(CART_ID_KEY) || '',
+            merchandiseId,
+            quantity,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok || !payload?.cart) throw new Error(payload?.error || 'Unable to add this item.');
+
+        localStorage.setItem(CART_ID_KEY, payload.cart.id);
+        localStorage.setItem(CART_COUNT_KEY, String(payload.cart.totalQuantity || 0));
+        window.dispatchEvent(new CustomEvent('vnh-cart-updated', { detail: payload.cart }));
+        addButton.textContent = 'Added to cart ✓';
+        setFeedback(`${quantity} item${quantity === 1 ? '' : 's'} added. Your cart stays on VNH until checkout.`);
+        window.setTimeout(() => {
+          if (!addButton.disabled) addButton.textContent = 'Add to cart';
+        }, 1800);
+      } catch (error) {
+        setFeedback(error instanceof Error ? error.message : 'Unable to add this item.', true);
+        addButton.textContent = 'Try again';
+      } finally {
+        addButton.classList.remove('is-loading');
+        const option = select instanceof HTMLSelectElement ? select.selectedOptions[0] : null;
+        const available = option ? option.dataset.available === 'true' : true;
+        addButton.disabled = !available;
+        addButton.classList.toggle('is-disabled', !available);
+      }
+    });
   }
 })();
 </script>
