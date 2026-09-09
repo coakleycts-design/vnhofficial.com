@@ -1,6 +1,6 @@
 # VNH Customer Accounts & Order History
 
-The VNH repository contains a native `/account` page, Shopify OAuth/PKCE login routes, and native order-history rendering through Shopify's Customer Account API.
+The VNH repository contains a native `/account` page, Shopify OAuth/PKCE login routes, automatic access-token refresh, and native order-history rendering through Shopify's Customer Account API.
 
 The implementation is deliberately feature-flagged by environment configuration. Until the Customer Account client ID is configured, the VNH account page safely sends sign-in to Shopify's hosted customer account instead of breaking the storefront.
 
@@ -10,17 +10,21 @@ In Shopify Admin:
 
 1. Confirm **Customer accounts** are enabled.
 2. Open the VNH **Headless** storefront / Customer Account API settings.
-3. Enable the Customer Account API permissions needed for customer account/order access.
+3. Enable the Customer Account API permissions needed for customer profile/order access.
 4. Add this callback URL exactly:
 
    `https://vnhofficial.com/api/shopify/account/callback`
 
-5. Copy the Customer Account API client ID.
-6. In Cloudflare, add it as a secret/environment variable:
+5. If the Customer Account API settings provide a JavaScript/origin allowlist, add:
+
+   `https://vnhofficial.com`
+
+6. Copy the Customer Account API client ID.
+7. In Cloudflare, add it as a secret/environment variable:
 
    `SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID`
 
-7. Only if Shopify identifies the client as confidential and provides a secret, add:
+8. Only if Shopify identifies the client as confidential and provides a secret, add:
 
    `SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET`
 
@@ -34,7 +38,7 @@ Do not commit either value to GitHub.
 → `/api/shopify/account/callback`
 → `/account`
 
-The OAuth implementation uses PKCE and state verification. Access, refresh, and ID tokens are stored in secure HttpOnly cookies rather than localStorage or browser-readable JavaScript.
+The OAuth implementation uses PKCE and state verification. Access, refresh, and ID tokens are stored in secure HttpOnly cookies rather than localStorage or browser-readable JavaScript. When the short-lived access token expires, VNH uses Shopify's refresh-token flow server-side and rotates the token cookies without exposing them to the browser.
 
 The VNH account page then displays:
 
