@@ -44,6 +44,8 @@ const socialImageSource = socialImage || siteSettings.socialShareUrl;
 const socialImageUrl = socialImageSource ? new URL(socialImageSource, siteOrigin).toString() : undefined;
 const googleSiteVerification = runtimeEnv.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const bingSiteVerification = runtimeEnv.PUBLIC_BING_SITE_VERIFICATION;
+const gaMeasurementId = String(runtimeEnv.PUBLIC_GA4_MEASUREMENT_ID || '').trim();
+const currentPath = Astro.url.pathname;
 
 const defaultStructuredData = [
   {
@@ -110,9 +112,22 @@ const jsonLd = structuredData
     {socialImageUrl && <meta name="twitter:image:alt" content={`${brandName} — ${brandTagline}`} />}
 
     <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)}></script>
+    {gaMeasurementId && <script async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`}></script>}
+    {gaMeasurementId && (
+      <script is:inline set:html={`
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        window.vnhTrack = function(name, params){ try { gtag('event', name, params || {}); } catch (_) {} };
+        gtag('js', new Date());
+        gtag('config', ${JSON.stringify(gaMeasurementId)}, { send_page_view: true });
+      `}></script>
+    )}
+    {!gaMeasurementId && <script is:inline>window.vnhTrack = function(){};</script>}
     <title>{title}</title>
   </head>
   <body style={`--vnh-topo-image:url("${topoSrc}")`}>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="/" aria-label={`${brandName} home`}>
@@ -123,21 +138,21 @@ const jsonLd = structuredData
           </div>
         </a>
         <nav class="main-nav" aria-label="Primary navigation">
-          <a href="/shop">{navShopLabel}</a>
-          <a href="/mission">{navMissionLabel}</a>
-          <a href="/contact">{navContactLabel}</a>
+          <a href="/shop" aria-current={currentPath.startsWith('/shop') ? 'page' : undefined}>{navShopLabel}</a>
+          <a href="/mission" aria-current={currentPath === '/mission' ? 'page' : undefined}>{navMissionLabel}</a>
+          <a href="/contact" aria-current={currentPath === '/contact' ? 'page' : undefined}>{navContactLabel}</a>
         </nav>
         <div class="header-actions" aria-label="Site actions">
           <a class="icon-button" href="/shop" aria-label={browseShopAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
-          <a class="icon-button" href="/shop" aria-label={accountAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
-          <a class="icon-button cart-icon-button" href="/cart" aria-label={cartAriaLabel} data-cart-link>
+          <a class="icon-button" href="/account" aria-label={accountAriaLabel} aria-current={currentPath === '/account' ? 'page' : undefined}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
+          <a class="icon-button cart-icon-button" href="/cart" aria-label={cartAriaLabel} data-cart-link aria-current={currentPath === '/cart' ? 'page' : undefined}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg>
             <span class="cart-count-badge" data-cart-badge hidden>0</span>
           </a>
         </div>
       </div>
     </header>
-    <main><slot /></main>
+    <main id="main-content" tabindex="-1"><slot /></main>
     <footer class="site-footer">
       <div class="container footer-inner">
         <div class="footer-brand"><img src={logoSrc} alt="" /><span>{brandName}</span></div>
@@ -153,9 +168,12 @@ const jsonLd = structuredData
     </footer>
 
     <style is:global>
+      .skip-link{position:fixed;left:12px;top:12px;z-index:9999;padding:10px 14px;background:#fff;color:#050607;font-weight:800;transform:translateY(-180%);transition:transform .15s}.skip-link:focus{transform:translateY(0)}
+      :focus-visible{outline:2px solid #fff;outline-offset:3px}.main-nav a[aria-current="page"]{color:#fff;text-decoration:underline;text-underline-offset:7px}.icon-button[aria-current="page"]{background:rgba(255,255,255,.08)}
       .cart-icon-button{position:relative}.cart-count-badge{position:absolute;right:-5px;top:-6px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#fff;color:#080a0c;font:800 10px/1 Oxanium,sans-serif;border:1px solid #080a0c}.cart-count-badge[hidden]{display:none!important}
       .footer-policies{display:flex;justify-content:center;align-items:center;gap:10px 22px;flex-wrap:wrap;padding-top:18px;padding-bottom:22px;border-top:1px solid rgba(255,255,255,.09)}.footer-policies a{color:#8f979e;text-decoration:none;font-size:.72rem;letter-spacing:.05em}.footer-policies a:hover,.footer-policies a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:3px}
       @media(max-width:640px){.footer-policies{justify-content:flex-start;gap:12px 18px}.footer-policies a{font-size:.74rem}}
+      @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
     </style>
     <script is:inline>
       (() => {
