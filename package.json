@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check:live": "node scripts/launch-check.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",
