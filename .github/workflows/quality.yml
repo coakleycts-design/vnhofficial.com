@@ -1,0 +1,32 @@
+name: VNH Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  storefront:
+    name: Storefront build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm run build
+
+  cms:
+    name: Sanity Studio build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm run build
