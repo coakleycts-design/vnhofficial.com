@@ -12,6 +12,21 @@ const seoDescription = text(shop.seoDescription, 'Shop VNH products, stickers, c
 const eyebrow = text(shop.eyebrow, 'Shop');
 const heading = text(shop.heading, 'Built for Real Use');
 const intro = text(shop.intro, 'Shop VNH products and releases. Inventory and pricing are provided directly by our Shopify store.');
+const productsHeading = text(shop.productsHeading, 'Current Products');
+const searchPlaceholder = text(shop.searchPlaceholder, 'Search products');
+const categoryLabel = text(shop.categoryLabel, 'Category');
+const allCategoriesLabel = text(shop.allCategoriesLabel, 'All categories');
+const availabilityLabel = text(shop.availabilityLabel, 'Available only');
+const sortLabel = text(shop.sortLabel, 'Sort');
+const sortFeaturedLabel = text(shop.sortFeaturedLabel, 'Featured');
+const sortNewestLabel = text(shop.sortNewestLabel, 'Newest');
+const sortPriceLowLabel = text(shop.sortPriceLowLabel, 'Price: Low to high');
+const sortPriceHighLabel = text(shop.sortPriceHighLabel, 'Price: High to low');
+const sortNameLabel = text(shop.sortNameLabel, 'Name');
+const viewCartLabel = text(shop.viewCartLabel, 'View cart');
+const viewDetailsLabel = text(shop.viewDetailsLabel, 'View details');
+const noResultsHeading = text(shop.noResultsHeading, 'No products found');
+const noResultsBody = text(shop.noResultsBody, 'Try another search or clear a filter.');
 
 const existingShopUrl = 'https://vnhofficial.myshopify.com';
 const configured = isShopifyConfigured(runtimeEnv);
@@ -20,11 +35,13 @@ let shopifyError = '';
 
 if (configured) {
   try {
-    products = await getShopifyProducts(runtimeEnv, 24, buyerIp);
+    products = await getShopifyProducts(runtimeEnv, 100, buyerIp);
   } catch (error) {
     shopifyError = error instanceof Error ? error.message : 'Unable to load Shopify products.';
   }
 }
+
+const productTypes = Array.from(new Set(products.map((product) => product.productType?.trim()).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
 
 const money = (value?: ShopifyMoney | null) => {
   if (!value) return '';
@@ -53,25 +70,66 @@ const comparePrice = (product: ShopifyProduct) => {
     </div>
   </section>
 
-  <section class="container shop-shell">
+  <section class="container shop-shell" data-shop-page>
     {products.length > 0 ? (
       <>
         <div class="shop-heading-row">
           <div>
             <div class="eyebrow">VNH Store</div>
-            <h2 class="display">Current Products</h2>
+            <h2 class="display">{productsHeading}</h2>
           </div>
-          <a class="shopify-link" href="/cart">View cart</a>
+          <a class="shopify-link" href="/cart">{viewCartLabel}</a>
         </div>
 
-        <div class="product-grid">
-          {products.map((product) => {
+        <form class="shop-controls" data-shop-controls role="search" aria-label="Search and filter VNH products">
+          <label class="search-control">
+            <span class="sr-only">Search products</span>
+            <input type="search" placeholder={searchPlaceholder} autocomplete="off" data-product-search />
+          </label>
+          <label class="select-control">
+            <span>{categoryLabel}</span>
+            <select data-product-category>
+              <option value="">{allCategoriesLabel}</option>
+              {productTypes.map((type) => <option value={type}>{type}</option>)}
+            </select>
+          </label>
+          <label class="availability-control">
+            <input type="checkbox" data-product-available />
+            <span>{availabilityLabel}</span>
+          </label>
+          <label class="select-control">
+            <span>{sortLabel}</span>
+            <select data-product-sort>
+              <option value="featured">{sortFeaturedLabel}</option>
+              <option value="newest">{sortNewestLabel}</option>
+              <option value="price-asc">{sortPriceLowLabel}</option>
+              <option value="price-desc">{sortPriceHighLabel}</option>
+              <option value="name">{sortNameLabel}</option>
+            </select>
+          </label>
+        </form>
+
+        <div class="results-meta" aria-live="polite"><span data-results-count>{products.length}</span> products</div>
+
+        <div class="product-grid" data-product-grid>
+          {products.map((product, index) => {
             const image = product.featuredImage;
             const compare = comparePrice(product);
             const productHref = localProductUrl(product.handle);
+            const priceValue = Number(product.priceRange?.minVariantPrice?.amount ?? 0);
             return (
-              <article class="product-card">
-                <a class="product-image-wrap" href={productHref} aria-label={`View ${product.title}`}>
+              <article
+                class="product-card"
+                data-product-card
+                data-index={index}
+                data-title={product.title.toLowerCase()}
+                data-description={(product.description || '').toLowerCase()}
+                data-type={product.productType || ''}
+                data-available={product.availableForSale ? 'true' : 'false'}
+                data-price={priceValue}
+                data-created={product.createdAt || ''}
+              >
+                <a class="product-image-wrap" href={productHref} aria-label={`View ${product.title}`} data-product-link data-item-id={product.id} data-item-name={product.title} data-item-price={priceValue}>
                   {image?.url ? (
                     <img src={image.url} alt={image.altText || product.title} loading="lazy" width={image.width || 800} height={image.height || 800} />
                   ) : (
@@ -80,19 +138,26 @@ const comparePrice = (product: ShopifyProduct) => {
                 </a>
                 <div class="product-card-body">
                   <div class="product-status">{product.availableForSale ? 'Available' : 'Currently unavailable'}</div>
-                  <h3><a class="product-title-link" href={productHref}>{product.title}</a></h3>
+                  {product.productType && <div class="product-type">{product.productType}</div>}
+                  <h3><a class="product-title-link" href={productHref} data-product-link data-item-id={product.id} data-item-name={product.title} data-item-price={priceValue}>{product.title}</a></h3>
                   {product.description && <p>{product.description}</p>}
                   <div class="product-card-footer">
                     <div class="product-price">
                       {compare && <span class="compare-price">{compare}</span>}
                       <strong>{startingPrice(product)}</strong>
                     </div>
-                    <a class="product-button" href={productHref}>View details</a>
+                    <a class="product-button" href={productHref} data-product-link data-item-id={product.id} data-item-name={product.title} data-item-price={priceValue}>{viewDetailsLabel}</a>
                   </div>
                 </div>
               </article>
             );
           })}
+        </div>
+
+        <div class="no-results" data-no-results hidden>
+          <h3 class="display">{noResultsHeading}</h3>
+          <p>{noResultsBody}</p>
+          <button type="button" class="product-button" data-clear-filters>Clear filters</button>
         </div>
       </>
     ) : (
@@ -115,26 +180,112 @@ const comparePrice = (product: ShopifyProduct) => {
 
 <style>
   .shop-shell{padding-top:clamp(34px,5vw,68px);padding-bottom:clamp(64px,8vw,112px)}
-  .shop-heading-row{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:30px}
-  .shop-heading-row h2,.shop-setup-state h2{margin:.35rem 0 0}
-  .shopify-link{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.34);padding-bottom:4px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}
-  .shopify-link:hover,.shopify-link:focus-visible{border-color:#fff}
-  .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-  .product-card{min-width:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;display:flex;flex-direction:column}
-  .product-image-wrap{display:block;aspect-ratio:1/1;background:#0c0d0f;overflow:hidden}
-  .product-image-wrap img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .25s ease}
-  .product-image-wrap:hover img{transform:scale(1.025)}
+  .shop-heading-row{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:24px}.shop-heading-row h2,.shop-setup-state h2{margin:.35rem 0 0}
+  .shopify-link{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.34);padding-bottom:4px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}.shopify-link:hover,.shopify-link:focus-visible{border-color:#fff}
+  .shop-controls{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(160px,.65fr) auto minmax(180px,.7fr);gap:12px;align-items:end;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.025)}
+  .search-control input,.select-control select{width:100%;height:48px;box-sizing:border-box;border:1px solid rgba(255,255,255,.25);background:#0d1012;color:#fff;padding:0 12px;font-size:16px}.select-control{display:grid;gap:7px}.select-control>span{font:700 .66rem/1 Oxanium,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#aeb5bc}.availability-control{display:flex;align-items:center;gap:9px;min-height:48px;padding:0 10px;white-space:nowrap;font-size:.82rem}.availability-control input{width:18px;height:18px;accent-color:#fff}.results-meta{margin:0 0 16px;color:#8f979e;font-size:.78rem}
+  .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.product-card[hidden]{display:none!important}.product-card{min-width:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;display:flex;flex-direction:column}
+  .product-image-wrap{display:block;aspect-ratio:1/1;background:#0c0d0f;overflow:hidden}.product-image-wrap img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .25s ease}.product-image-wrap:hover img{transform:scale(1.025)}
   .product-image-placeholder{height:100%;display:grid;place-items:center;font:700 clamp(2.2rem,5vw,4.6rem)/1 Oxanium,sans-serif;letter-spacing:.16em;color:rgba(255,255,255,.18)}
-  .product-card-body{display:flex;flex:1;flex-direction:column;padding:20px}
-  .product-status{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#aeb5bc;margin-bottom:8px}
-  .product-card h3{font:700 1.25rem/1.15 Oxanium,sans-serif;margin:0 0 10px}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover,.product-title-link:focus-visible{text-decoration:underline;text-underline-offset:4px}
-  .product-card p{margin:0 0 22px;color:#c6cbd0;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .product-card-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:auto}
+  .product-card-body{display:flex;flex:1;flex-direction:column;padding:20px}.product-status,.product-type{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#aeb5bc}.product-type{margin-top:5px;color:#78828a}.product-card h3{font:700 1.25rem/1.15 Oxanium,sans-serif;margin:9px 0 10px}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover,.product-title-link:focus-visible{text-decoration:underline;text-underline-offset:4px}
+  .product-card p{margin:0 0 22px;color:#c6cbd0;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.product-card-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:auto}
   .product-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.product-price strong{font-size:1.02rem}.compare-price{text-decoration:line-through;color:#8f979f;font-size:.83rem}
-  .product-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;border:1px solid rgba(255,255,255,.3);color:inherit;text-decoration:none;font:700 .72rem/1 Oxanium,sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-  .product-button:hover,.product-button:focus-visible{border-color:#fff;background:rgba(255,255,255,.08)}
-  .shop-setup-state{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:clamp(28px,5vw,54px);border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035)}
-  .shop-setup-state p{max-width:760px;color:#c6cbd0;line-height:1.7}.shop-error{font-size:.78rem;color:#e6b28a}.setup-button{flex:0 0 auto}
-  @media(max-width:960px){.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:640px){.shop-heading-row,.shop-setup-state{align-items:stretch;flex-direction:column}.product-grid{grid-template-columns:1fr}.shopify-link{align-self:flex-start}.product-card-footer{align-items:flex-start;flex-direction:column}.product-button,.setup-button{width:100%}}
+  .product-button{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;border:1px solid rgba(255,255,255,.3);background:transparent;color:inherit;text-decoration:none;font:700 .72rem/1 Oxanium,sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;cursor:pointer}.product-button:hover,.product-button:focus-visible{border-color:#fff;background:rgba(255,255,255,.08)}
+  .no-results{margin-top:22px;padding:34px;border:1px solid rgba(255,255,255,.12);text-align:center}.no-results[hidden]{display:none!important}.no-results h3{margin:0 0 8px;font-size:2rem}.no-results p{color:#aeb5bc;margin:0 0 20px}
+  .shop-setup-state{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:clamp(28px,5vw,54px);border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035)}.shop-setup-state p{max-width:760px;color:#c6cbd0;line-height:1.7}.shop-error{font-size:.78rem;color:#e6b28a}.setup-button{flex:0 0 auto}
+  @media(max-width:1000px){.shop-controls{grid-template-columns:1fr 1fr}.availability-control{align-self:end}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:640px){.shop-heading-row,.shop-setup-state{align-items:stretch;flex-direction:column}.shop-controls{grid-template-columns:1fr}.product-grid{grid-template-columns:1fr}.shopify-link{align-self:flex-start}.product-card-footer{align-items:flex-start;flex-direction:column}.product-button,.setup-button{width:100%}}
 </style>
+
+<script is:inline>
+(() => {
+  const root = document.querySelector('[data-shop-page]');
+  if (!root) return;
+  const grid = root.querySelector('[data-product-grid]');
+  const cards = Array.from(root.querySelectorAll('[data-product-card]'));
+  const search = root.querySelector('[data-product-search]');
+  const category = root.querySelector('[data-product-category]');
+  const available = root.querySelector('[data-product-available]');
+  const sort = root.querySelector('[data-product-sort]');
+  const count = root.querySelector('[data-results-count]');
+  const noResults = root.querySelector('[data-no-results]');
+  const clear = root.querySelector('[data-clear-filters]');
+  let searchTimer = 0;
+
+  const params = new URLSearchParams(location.search);
+  if (search instanceof HTMLInputElement) search.value = params.get('q') || '';
+  if (category instanceof HTMLSelectElement) category.value = params.get('category') || '';
+  if (available instanceof HTMLInputElement) available.checked = params.get('available') === '1';
+  if (sort instanceof HTMLSelectElement && ['featured','newest','price-asc','price-desc','name'].includes(params.get('sort') || '')) sort.value = params.get('sort');
+
+  const updateUrl = () => {
+    const next = new URLSearchParams();
+    const q = search instanceof HTMLInputElement ? search.value.trim() : '';
+    const type = category instanceof HTMLSelectElement ? category.value : '';
+    const onlyAvailable = available instanceof HTMLInputElement && available.checked;
+    const order = sort instanceof HTMLSelectElement ? sort.value : 'featured';
+    if (q) next.set('q', q);
+    if (type) next.set('category', type);
+    if (onlyAvailable) next.set('available', '1');
+    if (order !== 'featured') next.set('sort', order);
+    history.replaceState(null, '', `${location.pathname}${next.toString() ? `?${next}` : ''}`);
+  };
+
+  const apply = () => {
+    const q = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+    const type = category instanceof HTMLSelectElement ? category.value : '';
+    const onlyAvailable = available instanceof HTMLInputElement && available.checked;
+    const order = sort instanceof HTMLSelectElement ? sort.value : 'featured';
+
+    const visible = cards.filter((card) => {
+      if (!(card instanceof HTMLElement)) return false;
+      const haystack = `${card.dataset.title || ''} ${card.dataset.description || ''}`;
+      const matchesText = !q || haystack.includes(q);
+      const matchesType = !type || card.dataset.type === type;
+      const matchesAvailable = !onlyAvailable || card.dataset.available === 'true';
+      const show = matchesText && matchesType && matchesAvailable;
+      card.hidden = !show;
+      return show;
+    });
+
+    visible.sort((a, b) => {
+      if (!(a instanceof HTMLElement) || !(b instanceof HTMLElement)) return 0;
+      if (order === 'price-asc') return Number(a.dataset.price || 0) - Number(b.dataset.price || 0);
+      if (order === 'price-desc') return Number(b.dataset.price || 0) - Number(a.dataset.price || 0);
+      if (order === 'name') return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+      if (order === 'newest') return String(b.dataset.created || '').localeCompare(String(a.dataset.created || ''));
+      return Number(a.dataset.index || 0) - Number(b.dataset.index || 0);
+    });
+    if (grid instanceof HTMLElement) visible.forEach((card) => grid.append(card));
+    if (count) count.textContent = String(visible.length);
+    if (noResults instanceof HTMLElement) noResults.hidden = visible.length > 0;
+    updateUrl();
+  };
+
+  [category, available, sort].forEach((control) => control?.addEventListener('change', apply));
+  search?.addEventListener('input', () => {
+    apply();
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => {
+      const term = search instanceof HTMLInputElement ? search.value.trim() : '';
+      if (term.length >= 2) window.vnhTrack?.('search', { search_term: term });
+    }, 700);
+  });
+  clear?.addEventListener('click', () => {
+    if (search instanceof HTMLInputElement) search.value = '';
+    if (category instanceof HTMLSelectElement) category.value = '';
+    if (available instanceof HTMLInputElement) available.checked = false;
+    if (sort instanceof HTMLSelectElement) sort.value = 'featured';
+    apply();
+    search instanceof HTMLInputElement && search.focus();
+  });
+  root.querySelectorAll('[data-product-link]').forEach((link) => link.addEventListener('click', () => {
+    if (!(link instanceof HTMLElement)) return;
+    window.vnhTrack?.('select_item', {
+      item_list_name: 'VNH Shop',
+      items: [{ item_id: link.dataset.itemId || '', item_name: link.dataset.itemName || '', price: Number(link.dataset.itemPrice || 0), quantity: 1 }],
+    });
+  }));
+  apply();
+})();
+</script>
