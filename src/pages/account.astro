@@ -80,7 +80,9 @@ const date = (value: string) => {
 };
 
 const friendlyStatus = (value?: string | null) => String(value || '').toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-const loginFailed = Astro.url.searchParams.get('login') === 'failed';
+const loginState = Astro.url.searchParams.get('login');
+const loginFailed = loginState === 'failed';
+const loginSetupRequired = loginState === 'setup';
 ---
 <BaseLayout
   title="Your Account | VNH Engineered Design"
@@ -153,16 +155,17 @@ const loginFailed = Astro.url.searchParams.get('login') === 'failed';
       <section class="signin-shell">
         <div class="eyebrow">VNH Account</div>
         <h1 class="display">Your Account</h1>
-        <p>Sign in to securely view your VNH orders and account information.</p>
-        {loginFailed && <p class="account-error">The Shopify sign-in did not complete. Please try again.</p>}
+        <p>Sign in securely with Shopify, then return here to VNH to view your orders and continue shopping.</p>
+        {loginFailed && <p class="account-error">The Shopify sign-in could not be completed. You have been returned to VNH instead of being sent to the Shopify storefront.</p>}
+        {loginSetupRequired && <p class="account-error">VNH customer sign-in still needs the Shopify Customer Account API client ID enabled for this storefront. No customer has been redirected away from VNH.</p>}
         {accountError && <p class="account-error">{accountError}</p>}
         <div class="signin-actions">
-          <a class="primary-button" href={configured ? '/api/shopify/account/login?returnTo=/account' : hostedCustomerAccountUrl}>
+          <a class="primary-button" href="/api/shopify/account/login?returnTo=/account">
             Sign in to VNH
           </a>
           <a class="secondary-button" href="/shop">Continue shopping</a>
         </div>
-        {!configured && <p class="setup-note">Account sign-in is securely handled by Shopify while the native VNH account connection is being enabled.</p>}
+        {!configured && !loginSetupRequired && <p class="setup-note">Native VNH account sign-in is waiting for the Shopify Customer Account API connection to be enabled.</p>}
       </section>
     )}
   </main>
