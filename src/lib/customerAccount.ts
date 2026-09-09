@@ -1,4 +1,6 @@
 const SHOPIFY_STORE_DOMAIN = 'vnhofficial.myshopify.com';
+const VNH_ORIGIN = 'https://vnhofficial.com';
+const VNH_USER_AGENT = 'VNH-Engineered-Design/1.0';
 
 export type CustomerAccountEnvironment = Record<string, unknown> & {
   SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID?: string;
@@ -99,7 +101,12 @@ export function isCustomerAccountConfigured(env: CustomerAccountEnvironment): bo
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': VNH_USER_AGENT,
+    },
+  });
   if (!response.ok) throw new Error(`Shopify account discovery returned ${response.status}.`);
   return await response.json() as T;
 }
@@ -151,6 +158,26 @@ export async function buildCustomerAuthorizationUrl(
   return url.toString();
 }
 
+function tokenRequestHeaders(env: CustomerAccountEnvironment, clientId: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Accept: 'application/json',
+    Origin: VNH_ORIGIN,
+    'User-Agent': VNH_USER_AGENT,
+  };
+  const secret = String(env.SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET || '').trim();
+  if (secret) headers.Authorization = `Basic ${btoa(`${clientId}:${secret}`)}`;
+  return headers;
+}
+
+async function tokenResponse(response: Response): Promise<CustomerTokenResponse> {
+  const payload = await response.json() as CustomerTokenResponse & { error?: string; error_description?: string };
+  if (!response.ok || !payload.access_token) {
+    throw new Error(payload.error_description || payload.error || `Shopify account token request returned ${response.status}.`);
+  }
+  return payload;
+}
+
 export async function exchangeCustomerCode(
   env: CustomerAccountEnvironment,
   code: string,
@@ -167,16 +194,35 @@ export async function exchangeCustomerCode(
     redirect_uri: redirectUri,
     code_verifier: verifier,
   });
-  const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded' };
-  const secret = String(env.SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET || '').trim();
-  if (secret) headers.Authorization = `Basic ${btoa(`${clientId}:${secret}`)}`;
 
-  const response = await fetch(auth.token_endpoint, { method: 'POST', headers, body });
-  const payload = await response.json() as CustomerTokenResponse & { error?: string; error_description?: string };
-  if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || payload.error || `Shopify account token request returned ${response.status}.`);
-  }
-  return payload;
+  const response = await fetch(auth.token_endpoint, {
+    method: 'POST',
+    headers: tokenRequestHeaders(env, clientId),
+    body,
+  });
+  return tokenResponse(response);
+}
+
+export async function refreshCustomerToken(
+  env: CustomerAccountEnvironment,
+  refreshToken: string,
+): Promise<CustomerTokenResponse> {
+  const clientId = String(env.SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID || '').trim();
+  if (!clientId) throw new Error('Customer Account API client ID is not configured.');
+  if (!refreshToken) throw new Error('Customer refresh token is missing.');
+  const auth = await discoverCustomerAuth();
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: clientId,
+    refresh_token: refreshToken,
+  });
+
+  const response = await fetch(auth.token_endpoint, {
+    method: 'POST',
+    headers: tokenRequestHeaders(env, clientId),
+    body,
+  });
+  return tokenResponse(response);
 }
 
 export async function getCustomerDashboard(accessToken: string): Promise<CustomerDashboard | null> {
@@ -185,7 +231,10 @@ export async function getCustomerDashboard(accessToken: string): Promise<Custome
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Accept: 'application/json',
       Authorization: accessToken,
+      Origin: VNH_ORIGIN,
+      'User-Agent': VNH_USER_AGENT,
     },
     body: JSON.stringify({ query: DASHBOARD_QUERY }),
   });
