@@ -180,16 +180,25 @@ const jsonLd = structuredData
         const KEY = 'vnh:cart-count';
         const badge = document.querySelector('[data-cart-badge]');
         const cartLink = document.querySelector('[data-cart-link]');
-        if (!(badge instanceof HTMLElement)) return;
-        const update = (value) => {
-          const count = Math.max(0, Number(value) || 0);
-          badge.textContent = count > 99 ? '99+' : String(count);
-          badge.hidden = count < 1;
-          if (cartLink instanceof HTMLAnchorElement) cartLink.setAttribute('aria-label', count ? `Cart, ${count} item${count === 1 ? '' : 's'}` : 'Cart');
-        };
-        try { update(localStorage.getItem(KEY)); } catch { update(0); }
-        window.addEventListener('vnh-cart-updated', (event) => update(event?.detail?.totalQuantity ?? localStorage.getItem(KEY)));
-        window.addEventListener('storage', (event) => { if (event.key === KEY) update(event.newValue); });
+        if (badge instanceof HTMLElement) {
+          const update = (value) => {
+            const count = Math.max(0, Number(value) || 0);
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.hidden = count < 1;
+            if (cartLink instanceof HTMLAnchorElement) cartLink.setAttribute('aria-label', count ? `Cart, ${count} item${count === 1 ? '' : 's'}` : 'Cart');
+          };
+          try { update(localStorage.getItem(KEY)); } catch { update(0); }
+          window.addEventListener('vnh-cart-updated', (event) => update(event?.detail?.totalQuantity ?? localStorage.getItem(KEY)));
+          window.addEventListener('storage', (event) => { if (event.key === KEY) update(event.newValue); });
+        }
+
+        document.addEventListener('click', (event) => {
+          const target = event.target instanceof Element ? event.target.closest('[data-checkout]') : null;
+          if (!target) return;
+          let itemCount = 0;
+          try { itemCount = Math.max(0, Number(localStorage.getItem(KEY)) || 0); } catch {}
+          window.vnhTrack?.('begin_checkout', { items_count: itemCount });
+        });
       })();
     </script>
   </body>
