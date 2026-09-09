@@ -1,38 +1,138 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getShopPage } from '../lib/sanity';
+import { getShopifyProducts, isShopifyConfigured, shopifyProductUrl, type ShopifyMoney, type ShopifyProduct } from '../lib/shopify';
 
-const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
+const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>;
 const shop = await getShopPage(runtimeEnv);
 const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
 const seoTitle = text(shop.seoTitle, 'Shop VNH | Products, Stickers, Collectibles & More');
 const seoDescription = text(shop.seoDescription, 'Shop VNH products, stickers, collectibles, apparel, and new releases built around practical ideas and real-world use.');
 const eyebrow = text(shop.eyebrow, 'Shop');
 const heading = text(shop.heading, 'Built for Real Use');
-const intro = text(shop.intro, 'The storefront is being prepared for Shopify. Products will appear here once the catalog connection is configured.');
-const card1Title = text(shop.card1Title, 'Stickers');
-const card1Body = text(shop.card1Body, 'VNH branded designs and releases.');
-const card2Title = text(shop.card2Title, 'Coins');
-const card2Body = text(shop.card2Body, 'Collectible VNH challenge coins.');
-const card3Title = text(shop.card3Title, 'Apparel');
-const card3Body = text(shop.card3Body, 'Coming as the catalog expands.');
-const card4Title = text(shop.card4Title, 'More');
-const card4Body = text(shop.card4Body, 'New products and useful items in development.');
+const intro = text(shop.intro, 'Shop VNH products and releases. Inventory and pricing are provided directly by our Shopify store.');
+
+const existingShopUrl = 'https://vnhofficial.myshopify.com';
+const configured = isShopifyConfigured(runtimeEnv);
+let products: ShopifyProduct[] = [];
+let shopifyError = '';
+
+if (configured) {
+  try {
+    products = await getShopifyProducts(runtimeEnv, 24);
+  } catch (error) {
+    shopifyError = error instanceof Error ? error.message : 'Unable to load Shopify products.';
+  }
+}
+
+const money = (value?: ShopifyMoney | null) => {
+  if (!value) return '';
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: value.currencyCode }).format(Number(value.amount));
+  } catch {
+    return `${value.amount} ${value.currencyCode}`;
+  }
+};
+
+const startingPrice = (product: ShopifyProduct) => money(product.priceRange?.minVariantPrice);
+const comparePrice = (product: ShopifyProduct) => {
+  const compare = product.compareAtPriceRange?.minVariantPrice;
+  if (!compare) return '';
+  const compareNumber = Number(compare.amount);
+  const priceNumber = Number(product.priceRange?.minVariantPrice?.amount ?? 0);
+  return compareNumber > priceNumber ? money(compare) : '';
+};
 ---
 <BaseLayout title={seoTitle} description={seoDescription}>
-  <section class="page-hero">
+  <section class="page-hero shop-hero">
     <div class="container">
       <div class="eyebrow">{eyebrow}</div>
       <h1 class="display">{heading}</h1>
       <p>{intro}</p>
     </div>
   </section>
-  <section class="container page-copy">
-    <div class="collection-grid">
-      <div class="collection-card"><h2 class="display">{card1Title}</h2><p>{card1Body}</p></div>
-      <div class="collection-card"><h2 class="display">{card2Title}</h2><p>{card2Body}</p></div>
-      <div class="collection-card"><h2 class="display">{card3Title}</h2><p>{card3Body}</p></div>
-      <div class="collection-card"><h2 class="display">{card4Title}</h2><p>{card4Body}</p></div>
-    </div>
+
+  <section class="container shop-shell">
+    {products.length > 0 ? (
+      <>
+        <div class="shop-heading-row">
+          <div>
+            <div class="eyebrow">VNH Store</div>
+            <h2 class="display">Current Products</h2>
+          </div>
+          <a class="shopify-link" href={existingShopUrl} target="_blank" rel="noopener noreferrer">Open full Shopify store</a>
+        </div>
+
+        <div class="product-grid">
+          {products.map((product) => {
+            const image = product.featuredImage;
+            const compare = comparePrice(product);
+            return (
+              <article class="product-card">
+                <a class="product-image-wrap" href={shopifyProductUrl(product.handle)} target="_blank" rel="noopener noreferrer" aria-label={`View ${product.title} in the VNH store`}>
+                  {image?.url ? (
+                    <img src={image.url} alt={image.altText || product.title} loading="lazy" width={image.width || 800} height={image.height || 800} />
+                  ) : (
+                    <div class="product-image-placeholder" aria-hidden="true">VNH</div>
+                  )}
+                </a>
+                <div class="product-card-body">
+                  <div class="product-status">{product.availableForSale ? 'Available' : 'Currently unavailable'}</div>
+                  <h3>{product.title}</h3>
+                  {product.description && <p>{product.description}</p>}
+                  <div class="product-card-footer">
+                    <div class="product-price">
+                      {compare && <span class="compare-price">{compare}</span>}
+                      <strong>{startingPrice(product)}</strong>
+                    </div>
+                    <a class="product-button" href={shopifyProductUrl(product.handle)} target="_blank" rel="noopener noreferrer">View product</a>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </>
+    ) : (
+      <div class="shop-setup-state">
+        <div>
+          <div class="eyebrow">VNH Store</div>
+          <h2 class="display">Shop Online</h2>
+          <p>
+            {configured
+              ? 'The Shopify connection is configured, but the product catalog could not be loaded right now. The existing store remains available.'
+              : 'The new storefront connection is being completed. The existing Shopify store remains fully online while we finish the new shop experience.'}
+          </p>
+          {shopifyError && <p class="shop-error">Shopify connection message: {shopifyError}</p>}
+        </div>
+        <a class="product-button setup-button" href={existingShopUrl} target="_blank" rel="noopener noreferrer">Continue to Shopify</a>
+      </div>
+    )}
   </section>
 </BaseLayout>
+
+<style>
+  .shop-shell{padding-top:clamp(34px,5vw,68px);padding-bottom:clamp(64px,8vw,112px)}
+  .shop-heading-row{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:30px}
+  .shop-heading-row h2,.shop-setup-state h2{margin:.35rem 0 0}
+  .shopify-link{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.34);padding-bottom:4px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}
+  .shopify-link:hover,.shopify-link:focus-visible{border-color:#fff}
+  .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+  .product-card{min-width:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);overflow:hidden;display:flex;flex-direction:column}
+  .product-image-wrap{display:block;aspect-ratio:1/1;background:#0c0d0f;overflow:hidden}
+  .product-image-wrap img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .25s ease}
+  .product-image-wrap:hover img{transform:scale(1.025)}
+  .product-image-placeholder{height:100%;display:grid;place-items:center;font:700 clamp(2.2rem,5vw,4.6rem)/1 Oxanium,sans-serif;letter-spacing:.16em;color:rgba(255,255,255,.18)}
+  .product-card-body{display:flex;flex:1;flex-direction:column;padding:20px}
+  .product-status{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#aeb5bc;margin-bottom:8px}
+  .product-card h3{font:700 1.25rem/1.15 Oxanium,sans-serif;margin:0 0 10px}
+  .product-card p{margin:0 0 22px;color:#c6cbd0;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .product-card-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:auto}
+  .product-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.product-price strong{font-size:1.02rem}.compare-price{text-decoration:line-through;color:#8f979f;font-size:.83rem}
+  .product-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;border:1px solid rgba(255,255,255,.3);color:inherit;text-decoration:none;font:700 .72rem/1 Oxanium,sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .product-button:hover,.product-button:focus-visible{border-color:#fff;background:rgba(255,255,255,.08)}
+  .shop-setup-state{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:clamp(28px,5vw,54px);border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.035)}
+  .shop-setup-state p{max-width:760px;color:#c6cbd0;line-height:1.7}.shop-error{font-size:.78rem;color:#e6b28a}.setup-button{flex:0 0 auto}
+  @media(max-width:960px){.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:640px){.shop-heading-row,.shop-setup-state{align-items:stretch;flex-direction:column}.product-grid{grid-template-columns:1fr}.shopify-link{align-self:flex-start}.product-card-footer{align-items:flex-start;flex-direction:column}.product-button,.setup-button{width:100%}}
+</style>
