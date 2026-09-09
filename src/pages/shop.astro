@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getShopPage } from '../lib/sanity';
-import { getShopifyProducts, isShopifyConfigured, shopifyProductUrl, type ShopifyMoney, type ShopifyProduct } from '../lib/shopify';
+import { getShopifyProducts, isShopifyConfigured, localProductUrl, type ShopifyMoney, type ShopifyProduct } from '../lib/shopify';
 
 const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>;
 const buyerIp = Astro.request.headers.get('CF-Connecting-IP');
@@ -68,9 +68,10 @@ const comparePrice = (product: ShopifyProduct) => {
           {products.map((product) => {
             const image = product.featuredImage;
             const compare = comparePrice(product);
+            const productHref = localProductUrl(product.handle);
             return (
               <article class="product-card">
-                <a class="product-image-wrap" href={shopifyProductUrl(product.handle)} target="_blank" rel="noopener noreferrer" aria-label={`View ${product.title} in the VNH store`}>
+                <a class="product-image-wrap" href={productHref} aria-label={`View ${product.title}`}>
                   {image?.url ? (
                     <img src={image.url} alt={image.altText || product.title} loading="lazy" width={image.width || 800} height={image.height || 800} />
                   ) : (
@@ -79,14 +80,14 @@ const comparePrice = (product: ShopifyProduct) => {
                 </a>
                 <div class="product-card-body">
                   <div class="product-status">{product.availableForSale ? 'Available' : 'Currently unavailable'}</div>
-                  <h3>{product.title}</h3>
+                  <h3><a class="product-title-link" href={productHref}>{product.title}</a></h3>
                   {product.description && <p>{product.description}</p>}
                   <div class="product-card-footer">
                     <div class="product-price">
                       {compare && <span class="compare-price">{compare}</span>}
                       <strong>{startingPrice(product)}</strong>
                     </div>
-                    <a class="product-button" href={shopifyProductUrl(product.handle)} target="_blank" rel="noopener noreferrer">View product</a>
+                    <a class="product-button" href={productHref}>View details</a>
                   </div>
                 </div>
               </article>
@@ -126,7 +127,7 @@ const comparePrice = (product: ShopifyProduct) => {
   .product-image-placeholder{height:100%;display:grid;place-items:center;font:700 clamp(2.2rem,5vw,4.6rem)/1 Oxanium,sans-serif;letter-spacing:.16em;color:rgba(255,255,255,.18)}
   .product-card-body{display:flex;flex:1;flex-direction:column;padding:20px}
   .product-status{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#aeb5bc;margin-bottom:8px}
-  .product-card h3{font:700 1.25rem/1.15 Oxanium,sans-serif;margin:0 0 10px}
+  .product-card h3{font:700 1.25rem/1.15 Oxanium,sans-serif;margin:0 0 10px}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover,.product-title-link:focus-visible{text-decoration:underline;text-underline-offset:4px}
   .product-card p{margin:0 0 22px;color:#c6cbd0;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .product-card-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:auto}
   .product-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.product-price strong{font-size:1.02rem}.compare-price{text-decoration:line-through;color:#8f979f;font-size:.83rem}
