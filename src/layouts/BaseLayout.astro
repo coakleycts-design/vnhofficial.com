@@ -143,7 +143,10 @@ const jsonLd = structuredData
           <a href="/contact" aria-current={currentPath === '/contact' ? 'page' : undefined}>{navContactLabel}</a>
         </nav>
         <div class="header-actions" aria-label="Site actions">
-          <a class="icon-button" href="/shop" aria-label={browseShopAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
+          <button class="icon-button mobile-menu-button" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav" data-mobile-menu-toggle>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <a class="icon-button shop-search-icon" href="/shop" aria-label={browseShopAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
           <a class="icon-button" href="/account" aria-label={accountAriaLabel} aria-current={currentPath === '/account' ? 'page' : undefined}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
           <a class="icon-button cart-icon-button" href="/cart" aria-label={cartAriaLabel} data-cart-link aria-current={currentPath === '/cart' ? 'page' : undefined}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg>
@@ -151,6 +154,14 @@ const jsonLd = structuredData
           </a>
         </div>
       </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" data-mobile-menu hidden>
+        <div class="container mobile-nav-inner">
+          <a href="/shop" aria-current={currentPath.startsWith('/shop') ? 'page' : undefined}>{navShopLabel}</a>
+          <a href="/mission" aria-current={currentPath === '/mission' ? 'page' : undefined}>{navMissionLabel}</a>
+          <a href="/contact" aria-current={currentPath === '/contact' ? 'page' : undefined}>{navContactLabel}</a>
+          <a href="/account" aria-current={currentPath === '/account' ? 'page' : undefined}>Account</a>
+        </div>
+      </nav>
     </header>
     <main id="main-content" tabindex="-1"><slot /></main>
     <footer class="site-footer">
@@ -169,10 +180,12 @@ const jsonLd = structuredData
 
     <style is:global>
       .skip-link{position:fixed;left:12px;top:12px;z-index:9999;padding:10px 14px;background:#fff;color:#050607;font-weight:800;transform:translateY(-180%);transition:transform .15s}.skip-link:focus{transform:translateY(0)}
-      :focus-visible{outline:2px solid #fff;outline-offset:3px}.main-nav a[aria-current="page"]{color:#fff;text-decoration:underline;text-underline-offset:7px}.icon-button[aria-current="page"]{background:rgba(255,255,255,.08)}
+      :focus-visible{outline:2px solid #fff;outline-offset:3px}.main-nav a[aria-current="page"],.mobile-nav a[aria-current="page"]{color:#fff;text-decoration:underline;text-underline-offset:7px}.icon-button[aria-current="page"]{background:rgba(255,255,255,.08)}
+      .mobile-menu-button{display:none;appearance:none;border:0;background:transparent;color:#fff;cursor:pointer;padding:0}.mobile-menu-button svg{pointer-events:none}.mobile-nav{display:none;border-top:1px solid rgba(255,255,255,.1);background:#050708;box-shadow:0 18px 30px rgba(0,0,0,.35)}.mobile-nav[hidden]{display:none!important}.mobile-nav-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.mobile-nav a{min-height:54px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.08);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}.mobile-nav a:last-child{border-right:0}.mobile-nav a:hover,.mobile-nav a:focus-visible{background:rgba(255,255,255,.06)}
       .cart-icon-button{position:relative}.cart-count-badge{position:absolute;right:-5px;top:-6px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#fff;color:#080a0c;font:800 10px/1 Oxanium,sans-serif;border:1px solid #080a0c}.cart-count-badge[hidden]{display:none!important}
       .footer-policies{display:flex;justify-content:center;align-items:center;gap:10px 22px;flex-wrap:wrap;padding-top:18px;padding-bottom:22px;border-top:1px solid rgba(255,255,255,.09)}.footer-policies a{color:#8f979e;text-decoration:none;font-size:.72rem;letter-spacing:.05em}.footer-policies a:hover,.footer-policies a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:3px}
-      @media(max-width:640px){.footer-policies{justify-content:flex-start;gap:12px 18px}.footer-policies a{font-size:.74rem}}
+      @media(max-width:1050px){.mobile-menu-button{display:grid}.mobile-nav:not([hidden]){display:block}}
+      @media(max-width:640px){.shop-search-icon{display:none}.mobile-nav-inner{grid-template-columns:1fr 1fr}.mobile-nav a{border-bottom:1px solid rgba(255,255,255,.08)}.footer-policies{justify-content:flex-start;gap:12px 18px}.footer-policies a{font-size:.74rem}}
       @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
     </style>
     <script is:inline>
@@ -190,6 +203,26 @@ const jsonLd = structuredData
           try { update(localStorage.getItem(KEY)); } catch { update(0); }
           window.addEventListener('vnh-cart-updated', (event) => update(event?.detail?.totalQuantity ?? localStorage.getItem(KEY)));
           window.addEventListener('storage', (event) => { if (event.key === KEY) update(event.newValue); });
+        }
+
+        const menuButton = document.querySelector('[data-mobile-menu-toggle]');
+        const mobileMenu = document.querySelector('[data-mobile-menu]');
+        const setMenu = (open) => {
+          if (!(menuButton instanceof HTMLButtonElement) || !(mobileMenu instanceof HTMLElement)) return;
+          mobileMenu.hidden = !open;
+          menuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+          menuButton.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+        };
+        if (menuButton instanceof HTMLButtonElement && mobileMenu instanceof HTMLElement) {
+          menuButton.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
+          mobileMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+          document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && menuButton.getAttribute('aria-expanded') === 'true') {
+              setMenu(false);
+              menuButton.focus();
+            }
+          });
+          window.addEventListener('resize', () => { if (window.innerWidth > 1050) setMenu(false); });
         }
 
         document.addEventListener('click', (event) => {
