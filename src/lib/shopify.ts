@@ -60,16 +60,24 @@ const PRODUCTS_QUERY = `#graphql
   }
 `;
 
-async function storefrontRequest<T>(env: RuntimeEnv, query: string, variables: Record<string, unknown> = {}): Promise<T> {
+async function storefrontRequest<T>(
+  env: RuntimeEnv,
+  query: string,
+  variables: Record<string, unknown> = {},
+  buyerIp?: string | null,
+): Promise<T> {
   const token = String(env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || '').trim();
   if (!token) throw new Error('SHOPIFY_STOREFRONT_PRIVATE_TOKEN is not configured.');
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Shopify-Storefront-Private-Token': token,
+  };
+  if (buyerIp) headers['Shopify-Storefront-Buyer-IP'] = buyerIp;
+
   const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Shopify-Storefront-Access-Token': token,
-    },
+    headers,
     body: JSON.stringify({ query, variables }),
   });
 
@@ -82,8 +90,8 @@ async function storefrontRequest<T>(env: RuntimeEnv, query: string, variables: R
   return payload.data;
 }
 
-export async function getShopifyProducts(env: RuntimeEnv, first = 24): Promise<ShopifyProduct[]> {
-  const data = await storefrontRequest<{ products: { nodes: ShopifyProduct[] } }>(env, PRODUCTS_QUERY, { first });
+export async function getShopifyProducts(env: RuntimeEnv, first = 24, buyerIp?: string | null): Promise<ShopifyProduct[]> {
+  const data = await storefrontRequest<{ products: { nodes: ShopifyProduct[] } }>(env, PRODUCTS_QUERY, { first }, buyerIp);
   return data.products.nodes;
 }
 
