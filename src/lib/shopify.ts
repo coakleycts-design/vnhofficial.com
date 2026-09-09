@@ -6,18 +6,20 @@ export type ShopifyMoney = {
   currencyCode: string;
 };
 
+export type ShopifyImage = {
+  url: string;
+  altText?: string | null;
+  width?: number | null;
+  height?: number | null;
+};
+
 export type ShopifyProduct = {
   id: string;
   handle: string;
   title: string;
   description: string;
   availableForSale: boolean;
-  featuredImage?: {
-    url: string;
-    altText?: string | null;
-    width?: number | null;
-    height?: number | null;
-  } | null;
+  featuredImage?: ShopifyImage | null;
   priceRange: {
     minVariantPrice: ShopifyMoney;
     maxVariantPrice: ShopifyMoney;
@@ -25,6 +27,34 @@ export type ShopifyProduct = {
   compareAtPriceRange?: {
     minVariantPrice: ShopifyMoney;
     maxVariantPrice: ShopifyMoney;
+  } | null;
+};
+
+export type ShopifyProductOption = {
+  name: string;
+  values: string[];
+};
+
+export type ShopifyVariant = {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  selectedOptions: Array<{ name: string; value: string }>;
+  price: ShopifyMoney;
+  compareAtPrice?: ShopifyMoney | null;
+  image?: ShopifyImage | null;
+};
+
+export type ShopifyProductDetail = ShopifyProduct & {
+  descriptionHtml: string;
+  vendor?: string | null;
+  productType?: string | null;
+  images: { nodes: ShopifyImage[] };
+  options: ShopifyProductOption[];
+  variants: { nodes: ShopifyVariant[] };
+  seo?: {
+    title?: string | null;
+    description?: string | null;
   } | null;
 };
 
@@ -55,6 +85,67 @@ const PRODUCTS_QUERY = `#graphql
           minVariantPrice { amount currencyCode }
           maxVariantPrice { amount currencyCode }
         }
+      }
+    }
+  }
+`;
+
+const PRODUCT_QUERY = `#graphql
+  query VnhShopProduct($handle: String!) {
+    product(handle: $handle) {
+      id
+      handle
+      title
+      description
+      descriptionHtml
+      availableForSale
+      vendor
+      productType
+      featuredImage {
+        url
+        altText
+        width
+        height
+      }
+      images(first: 12) {
+        nodes {
+          url
+          altText
+          width
+          height
+        }
+      }
+      options {
+        name
+        values
+      }
+      variants(first: 100) {
+        nodes {
+          id
+          title
+          availableForSale
+          selectedOptions { name value }
+          price { amount currencyCode }
+          compareAtPrice { amount currencyCode }
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+      priceRange {
+        minVariantPrice { amount currencyCode }
+        maxVariantPrice { amount currencyCode }
+      }
+      compareAtPriceRange {
+        minVariantPrice { amount currencyCode }
+        maxVariantPrice { amount currencyCode }
+      }
+      seo {
+        title
+        description
       }
     }
   }
@@ -95,12 +186,21 @@ export async function getShopifyProducts(env: RuntimeEnv, first = 24, buyerIp?: 
   return data.products.nodes;
 }
 
+export async function getShopifyProduct(env: RuntimeEnv, handle: string, buyerIp?: string | null): Promise<ShopifyProductDetail | null> {
+  const data = await storefrontRequest<{ product: ShopifyProductDetail | null }>(env, PRODUCT_QUERY, { handle }, buyerIp);
+  return data.product;
+}
+
 export function isShopifyConfigured(env: RuntimeEnv): boolean {
   return Boolean(String(env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || '').trim());
 }
 
 export function shopifyProductUrl(handle: string): string {
   return `https://${SHOPIFY_STORE_DOMAIN}/products/${encodeURIComponent(handle)}`;
+}
+
+export function localProductUrl(handle: string): string {
+  return `/shop/${encodeURIComponent(handle)}`;
 }
 
 export const shopifyConfig = {
