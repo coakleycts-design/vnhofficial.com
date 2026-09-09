@@ -11,7 +11,7 @@ export const siteSettings = defineType({
   ],
   fields: [
     defineField({name: 'brandName', title: 'Brand Name', type: 'string', group: 'brand', initialValue: 'VNH'}),
-    defineField({name: 'brandTagline', title: 'Brand Tagline', type: 'string', group: 'brand', initialValue: 'REAL PEOPLE. REAL PURPOSE.'}),
+    defineField({name: 'brandTagline', title: 'Brand Tagline', type: 'string', group: 'brand', initialValue: 'Engineered Design'}),
     defineField({name: 'navShopLabel', title: 'Shop Navigation Label', type: 'string', group: 'brand', initialValue: 'Shop'}),
     defineField({name: 'navMissionLabel', title: 'Mission Navigation Label', type: 'string', group: 'brand', initialValue: 'Mission'}),
     defineField({name: 'navContactLabel', title: 'Contact Navigation Label', type: 'string', group: 'brand', initialValue: 'Contact'}),
@@ -42,7 +42,7 @@ export const siteSettings = defineType({
       group: 'media',
       options: {hotspot: true}
     }),
-    defineField({name: 'footerText', title: 'Footer Text', type: 'string', group: 'footer', initialValue: 'VNH. Real People. Real Purpose.'}),
+    defineField({name: 'footerText', title: 'Footer Text', type: 'string', group: 'footer', initialValue: 'VNH Engineered Design'}),
     defineField({name: 'footerShopLabel', title: 'Footer Shop Label', type: 'string', group: 'footer', initialValue: 'Shop'}),
     defineField({name: 'footerMissionLabel', title: 'Footer Mission Label', type: 'string', group: 'footer', initialValue: 'Mission'}),
     defineField({name: 'footerContactLabel', title: 'Footer Contact Label', type: 'string', group: 'footer', initialValue: 'Contact'})
