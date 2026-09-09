@@ -144,10 +144,18 @@ const jsonLd = structuredData
         <div>© {new Date().getFullYear()} {footerText}</div>
         <div class="footer-links"><a href="/shop">{footerShopLabel}</a><a href="/mission">{footerMissionLabel}</a><a href="/contact">{footerContactLabel}</a></div>
       </div>
+      <nav class="container footer-policies" aria-label="Store policies">
+        <a href="/policies/terms-of-service">Terms of Service</a>
+        <a href="/policies/refund-policy">Refund Policy</a>
+        <a href="/policies/shipping-policy">Shipping Policy</a>
+        <a href="/policies/privacy-policy">Privacy Policy</a>
+      </nav>
     </footer>
 
     <style is:global>
       .cart-icon-button{position:relative}.cart-count-badge{position:absolute;right:-5px;top:-6px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#fff;color:#080a0c;font:800 10px/1 Oxanium,sans-serif;border:1px solid #080a0c}.cart-count-badge[hidden]{display:none!important}
+      .footer-policies{display:flex;justify-content:center;align-items:center;gap:10px 22px;flex-wrap:wrap;padding-top:18px;padding-bottom:22px;border-top:1px solid rgba(255,255,255,.09)}.footer-policies a{color:#8f979e;text-decoration:none;font-size:.72rem;letter-spacing:.05em}.footer-policies a:hover,.footer-policies a:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:3px}
+      @media(max-width:640px){.footer-policies{justify-content:flex-start;gap:12px 18px}.footer-policies a{font-size:.74rem}}
     </style>
     <script is:inline>
       (() => {
