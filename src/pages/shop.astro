@@ -4,6 +4,7 @@ import { getShopPage } from '../lib/sanity';
 import { getShopifyProducts, isShopifyConfigured, shopifyProductUrl, type ShopifyMoney, type ShopifyProduct } from '../lib/shopify';
 
 const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>;
+const buyerIp = Astro.request.headers.get('CF-Connecting-IP');
 const shop = await getShopPage(runtimeEnv);
 const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
 const seoTitle = text(shop.seoTitle, 'Shop VNH | Products, Stickers, Collectibles & More');
@@ -19,7 +20,7 @@ let shopifyError = '';
 
 if (configured) {
   try {
-    products = await getShopifyProducts(runtimeEnv, 24);
+    products = await getShopifyProducts(runtimeEnv, 24, buyerIp);
   } catch (error) {
     shopifyError = error instanceof Error ? error.message : 'Unable to load Shopify products.';
   }
