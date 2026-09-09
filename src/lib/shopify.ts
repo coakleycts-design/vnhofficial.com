@@ -58,8 +58,48 @@ export type ShopifyProductDetail = ShopifyProduct & {
   } | null;
 };
 
+export type ShopifyCartLine = {
+  id: string;
+  quantity: number;
+  cost: {
+    totalAmount: ShopifyMoney;
+  };
+  merchandise: {
+    id: string;
+    title: string;
+    availableForSale: boolean;
+    selectedOptions: Array<{ name: string; value: string }>;
+    price: ShopifyMoney;
+    image?: ShopifyImage | null;
+    product: {
+      title: string;
+      handle: string;
+      featuredImage?: ShopifyImage | null;
+    };
+  };
+};
+
+export type ShopifyCart = {
+  id: string;
+  checkoutUrl: string;
+  totalQuantity: number;
+  cost: {
+    subtotalAmount: ShopifyMoney;
+    totalAmount: ShopifyMoney;
+  };
+  lines: {
+    nodes: ShopifyCartLine[];
+  };
+};
+
 type RuntimeEnv = Record<string, unknown> & {
   SHOPIFY_STOREFRONT_PRIVATE_TOKEN?: string;
+};
+
+type CartUserError = {
+  field?: string[] | null;
+  message: string;
+  code?: string | null;
 };
 
 const PRODUCTS_QUERY = `#graphql
@@ -151,6 +191,101 @@ const PRODUCT_QUERY = `#graphql
   }
 `;
 
+const CART_FIELDS = `#graphql
+  fragment VnhCartFields on Cart {
+    id
+    checkoutUrl
+    totalQuantity
+    cost {
+      subtotalAmount { amount currencyCode }
+      totalAmount { amount currencyCode }
+    }
+    lines(first: 100) {
+      nodes {
+        id
+        quantity
+        cost {
+          totalAmount { amount currencyCode }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            title
+            availableForSale
+            selectedOptions { name value }
+            price { amount currencyCode }
+            image {
+              url
+              altText
+              width
+              height
+            }
+            product {
+              title
+              handle
+              featuredImage {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const CART_QUERY = `#graphql
+  ${CART_FIELDS}
+  query VnhCart($id: ID!) {
+    cart(id: $id) {
+      ...VnhCartFields
+    }
+  }
+`;
+
+const CART_CREATE_MUTATION = `#graphql
+  ${CART_FIELDS}
+  mutation VnhCartCreate($lines: [CartLineInput!]) {
+    cartCreate(input: { lines: $lines }) {
+      cart { ...VnhCartFields }
+      userErrors { field message code }
+    }
+  }
+`;
+
+const CART_LINES_ADD_MUTATION = `#graphql
+  ${CART_FIELDS}
+  mutation VnhCartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart { ...VnhCartFields }
+      userErrors { field message code }
+    }
+  }
+`;
+
+const CART_LINES_UPDATE_MUTATION = `#graphql
+  ${CART_FIELDS}
+  mutation VnhCartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart { ...VnhCartFields }
+      userErrors { field message code }
+    }
+  }
+`;
+
+const CART_LINES_REMOVE_MUTATION = `#graphql
+  ${CART_FIELDS}
+  mutation VnhCartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+    cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+      cart { ...VnhCartFields }
+      userErrors { field message code }
+    }
+  }
+`;
+
 async function storefrontRequest<T>(
   env: RuntimeEnv,
   query: string,
@@ -181,6 +316,14 @@ async function storefrontRequest<T>(
   return payload.data;
 }
 
+function cartResult(cart: ShopifyCart | null, userErrors: CartUserError[] = []): ShopifyCart {
+  if (userErrors.length) {
+    throw new Error(userErrors.map((error) => error.message).filter(Boolean).join('; ') || 'Shopify could not update the cart.');
+  }
+  if (!cart) throw new Error('The Shopify cart is no longer available.');
+  return cart;
+}
+
 export async function getShopifyProducts(env: RuntimeEnv, first = 24, buyerIp?: string | null): Promise<ShopifyProduct[]> {
   const data = await storefrontRequest<{ products: { nodes: ShopifyProduct[] } }>(env, PRODUCTS_QUERY, { first }, buyerIp);
   return data.products.nodes;
@@ -189,6 +332,72 @@ export async function getShopifyProducts(env: RuntimeEnv, first = 24, buyerIp?: 
 export async function getShopifyProduct(env: RuntimeEnv, handle: string, buyerIp?: string | null): Promise<ShopifyProductDetail | null> {
   const data = await storefrontRequest<{ product: ShopifyProductDetail | null }>(env, PRODUCT_QUERY, { handle }, buyerIp);
   return data.product;
+}
+
+export async function getShopifyCart(env: RuntimeEnv, cartId: string, buyerIp?: string | null): Promise<ShopifyCart | null> {
+  const data = await storefrontRequest<{ cart: ShopifyCart | null }>(env, CART_QUERY, { id: cartId }, buyerIp);
+  return data.cart;
+}
+
+export async function createShopifyCart(
+  env: RuntimeEnv,
+  merchandiseId: string,
+  quantity = 1,
+  buyerIp?: string | null,
+): Promise<ShopifyCart> {
+  const data = await storefrontRequest<{
+    cartCreate: { cart: ShopifyCart | null; userErrors: CartUserError[] };
+  }>(env, CART_CREATE_MUTATION, {
+    lines: [{ merchandiseId, quantity }],
+  }, buyerIp);
+  return cartResult(data.cartCreate.cart, data.cartCreate.userErrors);
+}
+
+export async function addShopifyCartLine(
+  env: RuntimeEnv,
+  cartId: string,
+  merchandiseId: string,
+  quantity = 1,
+  buyerIp?: string | null,
+): Promise<ShopifyCart> {
+  const data = await storefrontRequest<{
+    cartLinesAdd: { cart: ShopifyCart | null; userErrors: CartUserError[] };
+  }>(env, CART_LINES_ADD_MUTATION, {
+    cartId,
+    lines: [{ merchandiseId, quantity }],
+  }, buyerIp);
+  return cartResult(data.cartLinesAdd.cart, data.cartLinesAdd.userErrors);
+}
+
+export async function updateShopifyCartLine(
+  env: RuntimeEnv,
+  cartId: string,
+  lineId: string,
+  quantity: number,
+  buyerIp?: string | null,
+): Promise<ShopifyCart> {
+  const data = await storefrontRequest<{
+    cartLinesUpdate: { cart: ShopifyCart | null; userErrors: CartUserError[] };
+  }>(env, CART_LINES_UPDATE_MUTATION, {
+    cartId,
+    lines: [{ id: lineId, quantity }],
+  }, buyerIp);
+  return cartResult(data.cartLinesUpdate.cart, data.cartLinesUpdate.userErrors);
+}
+
+export async function removeShopifyCartLine(
+  env: RuntimeEnv,
+  cartId: string,
+  lineId: string,
+  buyerIp?: string | null,
+): Promise<ShopifyCart> {
+  const data = await storefrontRequest<{
+    cartLinesRemove: { cart: ShopifyCart | null; userErrors: CartUserError[] };
+  }>(env, CART_LINES_REMOVE_MUTATION, {
+    cartId,
+    lineIds: [lineId],
+  }, buyerIp);
+  return cartResult(data.cartLinesRemove.cart, data.cartLinesRemove.userErrors);
 }
 
 export function isShopifyConfigured(env: RuntimeEnv): boolean {
