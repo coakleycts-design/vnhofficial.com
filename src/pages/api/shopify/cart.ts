@@ -5,6 +5,7 @@ import {
   getShopifyCart,
   removeShopifyCartLine,
   updateShopifyCartLine,
+  type ShopifyCart,
 } from '../../../lib/shopify';
 
 export const prerender = false;
@@ -25,6 +26,16 @@ const cleanQuantity = (value: unknown, fallback = 1) => {
   return Math.max(0, Math.min(99, Math.floor(parsed)));
 };
 
+const withSilentCheckoutSso = (cart: ShopifyCart): ShopifyCart => {
+  try {
+    const checkoutUrl = new URL(cart.checkoutUrl);
+    checkoutUrl.searchParams.set('sso', 'silent');
+    return { ...cart, checkoutUrl: checkoutUrl.toString() };
+  } catch {
+    return cart;
+  }
+};
+
 export const GET: APIRoute = async ({ request, url, locals }) => {
   const cartId = String(url.searchParams.get('cartId') || '').trim();
   if (!cartId) return json({ ok: false, error: 'Missing cart ID.' }, 400);
@@ -32,7 +43,7 @@ export const GET: APIRoute = async ({ request, url, locals }) => {
   try {
     const cart = await getShopifyCart(runtimeEnv(locals), cartId, buyerIp(request));
     if (!cart) return json({ ok: false, error: 'Cart not found.' }, 404);
-    return json({ ok: true, cart });
+    return json({ ok: true, cart: withSilentCheckoutSso(cart) });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to load cart.';
     return json({ ok: false, error: message }, 400);
