@@ -97,6 +97,28 @@ const latestRightAlt = text(home.latestRightAlt, 'VNH sticker collection');
     </div>
   </section>
 
+  <section class="collections shop-feature">
+    <div class="container">
+      <div class="section-head shop-feature-head">
+        <div>
+          <div class="eyebrow">{shopEyebrow}</div>
+          <h2 class="display">{shopHeading}</h2>
+        </div>
+      </div>
+
+      <a class="product-showcase-link" href="/shop" aria-label="Shop all VNH products">
+        <div class="product-showcase">
+          <div class="product-photo product-photo-model">
+            <img src={latestLeftSrc} alt={latestLeftAlt} loading="eager" />
+          </div>
+          <div class="product-photo product-photo-stickers">
+            <img src={latestRightSrc} alt={latestRightAlt} loading="lazy" />
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
+
   <section class="signup" id="keep-updated">
     <div class="container signup-inner">
       <div>
@@ -117,28 +139,6 @@ const latestRightAlt = text(home.latestRightAlt, 'VNH sticker collection');
         <div class="form-note" id="signup-status">{signupNote}</div>
       </form>
       <div class="signup-sideword" aria-hidden="true">{signupSideLine1}<br/>{signupSideLine2}<br/>{signupSideLine3}</div>
-    </div>
-  </section>
-
-  <section class="collections shop-feature">
-    <div class="container">
-      <div class="section-head shop-feature-head">
-        <div>
-          <div class="eyebrow">{shopEyebrow}</div>
-          <h2 class="display">{shopHeading}</h2>
-        </div>
-      </div>
-
-      <a class="product-showcase-link" href="/shop" aria-label="Shop all VNH products">
-        <div class="product-showcase">
-          <div class="product-photo product-photo-model">
-            <img src={latestLeftSrc} alt={latestLeftAlt} loading="eager" />
-          </div>
-          <div class="product-photo product-photo-stickers">
-            <img src={latestRightSrc} alt={latestRightAlt} loading="lazy" />
-          </div>
-        </div>
-      </a>
     </div>
   </section>
 
