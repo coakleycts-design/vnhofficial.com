@@ -18,14 +18,21 @@ const runtimeEnv = (Astro.locals as any)?.runtime?.env ?? import.meta.env;
 const siteSettings = await getSiteSettings(runtimeEnv);
 const text = (value: string | undefined, fallback: string) => value?.trim() || fallback;
 const brandName = text(siteSettings.brandName, 'VNH');
-const brandTagline = text(siteSettings.brandTagline, 'REAL PEOPLE. REAL PURPOSE.');
+const configuredBrandTagline = text(siteSettings.brandTagline, 'Engineered Design');
+const brandTagline = configuredBrandTagline.toUpperCase() === 'REAL PEOPLE. REAL PURPOSE.'
+  ? 'Engineered Design'
+  : configuredBrandTagline;
+const companyName = 'VNH Engineered Design';
 const navShopLabel = text(siteSettings.navShopLabel, 'Shop');
 const navMissionLabel = text(siteSettings.navMissionLabel, 'Mission');
 const navContactLabel = text(siteSettings.navContactLabel, 'Contact');
 const browseShopAriaLabel = text(siteSettings.browseShopAriaLabel, 'Browse shop');
 const accountAriaLabel = text(siteSettings.accountAriaLabel, 'Account');
 const cartAriaLabel = text(siteSettings.cartAriaLabel, 'Cart');
-const footerText = text(siteSettings.footerText, 'VNH. Real People. Real Purpose.');
+const configuredFooterText = text(siteSettings.footerText, companyName);
+const footerText = configuredFooterText.toUpperCase() === 'VNH. REAL PEOPLE. REAL PURPOSE.'
+  ? companyName
+  : configuredFooterText;
 const footerShopLabel = text(siteSettings.footerShopLabel, 'Shop');
 const footerMissionLabel = text(siteSettings.footerMissionLabel, 'Mission');
 const footerContactLabel = text(siteSettings.footerContactLabel, 'Contact');
@@ -42,7 +49,7 @@ const defaultStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: brandName,
+    name: companyName,
     url: siteOrigin.toString(),
     logo: new URL(logoSrc, siteOrigin).toString(),
     slogan: brandTagline
