@@ -35,10 +35,33 @@ const selectedCompare = selectedVariant?.compareAtPrice && Number(selectedVarian
 const seoTitle = product?.seo?.title?.trim() || (product ? `${product.title} | VNH Engineered Design` : 'Product | VNH Engineered Design');
 const seoDescription = product?.seo?.description?.trim() || product?.description?.trim() || 'Shop VNH Engineered Design products.';
 const images = product?.images?.nodes?.length ? product.images.nodes : product?.featuredImage ? [product.featuredImage] : [];
+const productStructuredData = product ? {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.title,
+  description: product.description,
+  image: images.map((image) => image.url),
+  brand: { '@type': 'Brand', name: product.vendor || 'VNH Engineered Design' },
+  offers: product.variants.nodes.map((variant) => ({
+    '@type': 'Offer',
+    url: new URL(`/shop/${encodeURIComponent(product!.handle)}`, Astro.site ?? 'https://vnhofficial.com').toString(),
+    priceCurrency: variant.price.currencyCode,
+    price: variant.price.amount,
+    availability: variant.availableForSale ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    itemCondition: 'https://schema.org/NewCondition'
+  }))
+} : undefined;
 ---
-<BaseLayout title={seoTitle} description={seoDescription}>
+<BaseLayout title={seoTitle} description={seoDescription} ogType="product" socialImage={images[0]?.url} structuredData={productStructuredData}>
   {product ? (
-    <main class="product-page container" data-product-page>
+    <main
+      class="product-page container"
+      data-product-page
+      data-product-id={product.id}
+      data-product-title={product.title}
+      data-product-price={selectedVariant?.price.amount || ''}
+      data-product-currency={selectedVariant?.price.currencyCode || ''}
+    >
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/shop">Shop</a><span aria-hidden="true">/</span><span>{product.title}</span>
       </nav>
@@ -99,6 +122,8 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
                   <option
                     value={variant.id}
                     data-price={money(variant.price)}
+                    data-price-value={variant.price.amount}
+                    data-currency={variant.price.currencyCode}
                     data-compare={variant.compareAtPrice && Number(variant.compareAtPrice.amount) > Number(variant.price.amount) ? money(variant.compareAtPrice) : ''}
                     data-available={variant.availableForSale ? 'true' : 'false'}
                     selected={variant.id === selectedVariant?.id}
@@ -122,6 +147,8 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
               type="button"
               data-add-to-cart
               data-variant-id={selectedVariant?.id || ''}
+              data-price-value={selectedVariant?.price.amount || ''}
+              data-currency={selectedVariant?.price.currencyCode || ''}
               disabled={!selectedVariant?.availableForSale}
             >
               {selectedVariant?.availableForSale ? 'Add to cart' : 'Currently unavailable'}
@@ -197,6 +224,12 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
   const quantityInput = root.querySelector('[data-quantity]');
   const feedback = root.querySelector('[data-cart-feedback]');
 
+  window.vnhTrack?.('view_item', {
+    currency: root.dataset.productCurrency || undefined,
+    value: Number(root.dataset.productPrice || 0),
+    items: [{ item_id: root.dataset.productId || '', item_name: root.dataset.productTitle || '', price: Number(root.dataset.productPrice || 0), quantity: 1 }],
+  });
+
   const setFeedback = (message, isError = false) => {
     if (!(feedback instanceof HTMLElement)) return;
     feedback.textContent = message;
@@ -214,6 +247,8 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
       }
       const available = option.dataset.available === 'true';
       addButton.dataset.variantId = option.value;
+      addButton.dataset.priceValue = option.dataset.priceValue || '';
+      addButton.dataset.currency = option.dataset.currency || '';
       addButton.disabled = !available;
       addButton.classList.toggle('is-disabled', !available);
       addButton.textContent = available ? 'Add to cart' : 'Currently unavailable';
@@ -259,6 +294,11 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
         localStorage.setItem(CART_ID_KEY, payload.cart.id);
         localStorage.setItem(CART_COUNT_KEY, String(payload.cart.totalQuantity || 0));
         window.dispatchEvent(new CustomEvent('vnh-cart-updated', { detail: payload.cart }));
+        window.vnhTrack?.('add_to_cart', {
+          currency: addButton.dataset.currency || undefined,
+          value: Number(addButton.dataset.priceValue || 0) * quantity,
+          items: [{ item_id: merchandiseId, item_name: root.dataset.productTitle || '', price: Number(addButton.dataset.priceValue || 0), quantity }],
+        });
         addButton.textContent = 'Added to cart ✓';
         setFeedback(`${quantity} item${quantity === 1 ? '' : 's'} added. Your cart stays on VNH until checkout.`);
         window.setTimeout(() => {
