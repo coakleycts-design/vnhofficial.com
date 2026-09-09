@@ -130,7 +130,10 @@ const jsonLd = structuredData
         <div class="header-actions" aria-label="Site actions">
           <a class="icon-button" href="/shop" aria-label={browseShopAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></a>
           <a class="icon-button" href="/shop" aria-label={accountAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></a>
-          <a class="icon-button" href="/shop" aria-label={cartAriaLabel}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg></a>
+          <a class="icon-button cart-icon-button" href="/cart" aria-label={cartAriaLabel} data-cart-link>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/></svg>
+            <span class="cart-count-badge" data-cart-badge hidden>0</span>
+          </a>
         </div>
       </div>
     </header>
@@ -142,5 +145,26 @@ const jsonLd = structuredData
         <div class="footer-links"><a href="/shop">{footerShopLabel}</a><a href="/mission">{footerMissionLabel}</a><a href="/contact">{footerContactLabel}</a></div>
       </div>
     </footer>
+
+    <style is:global>
+      .cart-icon-button{position:relative}.cart-count-badge{position:absolute;right:-5px;top:-6px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#fff;color:#080a0c;font:800 10px/1 Oxanium,sans-serif;border:1px solid #080a0c}.cart-count-badge[hidden]{display:none!important}
+    </style>
+    <script is:inline>
+      (() => {
+        const KEY = 'vnh:cart-count';
+        const badge = document.querySelector('[data-cart-badge]');
+        const cartLink = document.querySelector('[data-cart-link]');
+        if (!(badge instanceof HTMLElement)) return;
+        const update = (value) => {
+          const count = Math.max(0, Number(value) || 0);
+          badge.textContent = count > 99 ? '99+' : String(count);
+          badge.hidden = count < 1;
+          if (cartLink instanceof HTMLAnchorElement) cartLink.setAttribute('aria-label', count ? `Cart, ${count} item${count === 1 ? '' : 's'}` : 'Cart');
+        };
+        try { update(localStorage.getItem(KEY)); } catch { update(0); }
+        window.addEventListener('vnh-cart-updated', (event) => update(event?.detail?.totalQuantity ?? localStorage.getItem(KEY)));
+        window.addEventListener('storage', (event) => { if (event.key === KEY) update(event.newValue); });
+      })();
+    </script>
   </body>
 </html>
