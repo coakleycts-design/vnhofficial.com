@@ -104,6 +104,21 @@ export type ShopPage = {
   eyebrow?: string;
   heading?: string;
   intro?: string;
+  productsHeading?: string;
+  searchPlaceholder?: string;
+  categoryLabel?: string;
+  allCategoriesLabel?: string;
+  availabilityLabel?: string;
+  sortLabel?: string;
+  sortFeaturedLabel?: string;
+  sortNewestLabel?: string;
+  sortPriceLowLabel?: string;
+  sortPriceHighLabel?: string;
+  sortNameLabel?: string;
+  viewCartLabel?: string;
+  viewDetailsLabel?: string;
+  noResultsHeading?: string;
+  noResultsBody?: string;
   card1Title?: string;
   card1Body?: string;
   card2Title?: string;
@@ -177,6 +192,9 @@ export async function getContactPage(environment?: SanityEnvironment): Promise<C
 export async function getShopPage(environment?: SanityEnvironment): Promise<ShopPage> {
   return await sanityQuery<ShopPage>(`*[_id == "shopPage"][0]{
     seoTitle, seoDescription, eyebrow, heading, intro,
+    productsHeading, searchPlaceholder, categoryLabel, allCategoriesLabel, availabilityLabel,
+    sortLabel, sortFeaturedLabel, sortNewestLabel, sortPriceLowLabel, sortPriceHighLabel, sortNameLabel,
+    viewCartLabel, viewDetailsLabel, noResultsHeading, noResultsBody,
     card1Title, card1Body, card2Title, card2Body, card3Title, card3Body, card4Title, card4Body
   }`, environment) ?? {};
 }
