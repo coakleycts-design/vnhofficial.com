@@ -17,7 +17,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
   },
 });
 
-const runtimeEnv = (locals: App.Locals) => (((locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>);
+const runtimeEnv = (locals: unknown) => ((((locals as any)?.runtime?.env) ?? import.meta.env) as Record<string, unknown>);
 const buyerIp = (request: Request) => request.headers.get('CF-Connecting-IP');
 const cleanQuantity = (value: unknown, fallback = 1) => {
   const parsed = Number(value);
