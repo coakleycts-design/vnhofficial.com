@@ -6,23 +6,17 @@ const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as R
 const buyerIp = Astro.request.headers.get('CF-Connecting-IP');
 const handle = String(Astro.params.handle || '').trim();
 
-let product: ShopifyProductDetail | null = null;
-let errorMessage = '';
-
-if (handle) {
-  try {
-    product = await getShopifyProduct(runtimeEnv, handle, buyerIp);
-  } catch (error) {
-    errorMessage = error instanceof Error ? error.message : 'Unable to load this product.';
-  }
-}
-
 if (!handle) {
   return Astro.redirect('/shop');
 }
 
-if (!product && !errorMessage) {
-  Astro.response.status = 404;
+let product: ShopifyProductDetail | null = null;
+let errorMessage = '';
+
+try {
+  product = await getShopifyProduct(runtimeEnv, handle, buyerIp);
+} catch (error) {
+  errorMessage = error instanceof Error ? error.message : 'Unable to load this product.';
 }
 
 const money = (value?: ShopifyMoney | null) => {
@@ -88,7 +82,7 @@ const images = product?.images?.nodes?.length ? product.images.nodes : product?.
         <div class="product-info">
           <div class="eyebrow">{product.productType || 'VNH Product'}</div>
           <h1 class="display">{product.title}</h1>
-          <div class="availability" class:list={[product.availableForSale ? 'available' : 'unavailable']}>
+          <div class:list={['availability', product.availableForSale ? 'available' : 'unavailable']}>
             {product.availableForSale ? 'Available' : 'Currently unavailable'}
           </div>
 
