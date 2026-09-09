@@ -5,21 +5,63 @@ import {
   getCustomerDashboard,
   hostedCustomerAccountUrl,
   isCustomerAccountConfigured,
+  refreshCustomerToken,
   type CustomerDashboard,
   type CustomerOrderMoney,
+  type CustomerTokenResponse,
 } from '../lib/customerAccount';
 
 const runtimeEnv = ((Astro.locals as any)?.runtime?.env ?? import.meta.env) as Record<string, unknown>;
 const configured = isCustomerAccountConfigured(runtimeEnv);
 const accessToken = Astro.cookies.get(customerAccountCookies.access)?.value || '';
+const refreshToken = Astro.cookies.get(customerAccountCookies.refresh)?.value || '';
 let customer: CustomerDashboard | null = null;
 let accountError = '';
+
+const setTokenCookies = (token: CustomerTokenResponse) => {
+  const accessMaxAge = Math.max(300, Number(token.expires_in || 3600) - 60);
+  Astro.cookies.set(customerAccountCookies.access, token.access_token, {
+    path: '/', httpOnly: true, secure: true, sameSite: 'lax', maxAge: accessMaxAge,
+  });
+  if (token.refresh_token) {
+    Astro.cookies.set(customerAccountCookies.refresh, token.refresh_token, {
+      path: '/', httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+  if (token.id_token) {
+    Astro.cookies.set(customerAccountCookies.idToken, token.id_token, {
+      path: '/', httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60 * 60 * 24,
+    });
+  }
+};
+
+const clearAccountCookies = () => {
+  const options = { path: '/' };
+  Astro.cookies.delete(customerAccountCookies.access, options);
+  Astro.cookies.delete(customerAccountCookies.refresh, options);
+  Astro.cookies.delete(customerAccountCookies.idToken, options);
+};
 
 if (configured && accessToken) {
   try {
     customer = await getCustomerDashboard(accessToken);
   } catch (error) {
     accountError = error instanceof Error ? error.message : 'Unable to load your account right now.';
+  }
+}
+
+if (configured && !customer && refreshToken && !accountError) {
+  try {
+    const refreshed = await refreshCustomerToken(runtimeEnv, refreshToken);
+    setTokenCookies(refreshed);
+    customer = await getCustomerDashboard(refreshed.access_token);
+    if (!customer) {
+      clearAccountCookies();
+      accountError = 'Your secure account session expired. Please sign in again.';
+    }
+  } catch {
+    clearAccountCookies();
+    accountError = 'Your secure account session expired. Please sign in again.';
   }
 }
 
