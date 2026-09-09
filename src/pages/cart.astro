@@ -43,6 +43,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .breadcrumbs{display:flex;gap:9px;align-items:center;margin-bottom:clamp(24px,4vw,42px);font-size:.78rem;color:#9ea6ad}.breadcrumbs a{color:inherit;text-decoration:none}.breadcrumbs a:hover,.breadcrumbs a:focus-visible{color:#fff}
   .cart-header{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:34px}.cart-header h1{margin:.35rem 0 0;font-size:clamp(2.7rem,6vw,5.6rem)}.continue-link{color:#c5cbd0;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:3px}.continue-link:hover,.continue-link:focus-visible{color:#fff;border-color:#fff}
   .cart-message{min-height:24px;color:#aeb5bc}.cart-message.is-error{color:#e5a998}
+  [data-cart-empty][hidden],[data-cart-content][hidden]{display:none!important}
   .cart-empty{padding:clamp(34px,6vw,68px);border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.03)}.cart-empty h2{margin:0 0 14px}.cart-empty p{color:#c6cbd0;margin:0 0 24px}.primary-button,.checkout-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 22px;border:1px solid #fff;background:#fff;color:#0b0d0f;text-decoration:none;font:800 .76rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase}.primary-button:hover,.primary-button:focus-visible,.checkout-button:hover,.checkout-button:focus-visible{background:transparent;color:#fff}.checkout-button{width:100%;cursor:pointer}.checkout-button:disabled{opacity:.55;cursor:wait}
   .cart-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:clamp(28px,5vw,64px);align-items:start}.cart-lines{display:grid;gap:14px}.cart-line{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:20px;padding:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.025)}.cart-line-image{aspect-ratio:1/1;background:#0c0d0f;display:grid;place-items:center;overflow:hidden}.cart-line-image img{width:100%;height:100%;object-fit:contain;display:block}.cart-line-placeholder{font:700 1.5rem/1 Oxanium,sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.2)}.cart-line-body{min-width:0;padding:6px 0}.cart-line-title{display:inline-block;color:#fff;text-decoration:none;font:700 clamp(1rem,2vw,1.25rem)/1.2 Oxanium,sans-serif}.cart-line-title:hover,.cart-line-title:focus-visible{text-decoration:underline}.cart-line-option{margin-top:8px;color:#9da5ac;font-size:.82rem}.cart-line-unit{margin-top:12px;color:#d7dce0;font-size:.9rem}.cart-line-controls{display:flex;align-items:end;gap:10px;margin-top:18px;flex-wrap:wrap}.cart-line-controls label{display:grid;gap:7px;font:700 .66rem/1 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase}.cart-line-controls input{width:78px;min-height:42px;box-sizing:border-box;padding:8px 10px;background:#111417;color:#fff;border:1px solid rgba(255,255,255,.25);font:inherit;font-size:16px}.remove-button{min-height:42px;padding:8px 10px;background:transparent;color:#b9c0c6;border:0;border-bottom:1px solid rgba(255,255,255,.28);cursor:pointer;font:700 .7rem/1 Oxanium,sans-serif;text-transform:uppercase;letter-spacing:.08em}.remove-button:hover,.remove-button:focus-visible{color:#fff;border-color:#fff}.cart-line-total{padding:8px 4px;font-weight:800;white-space:nowrap}.cart-line.is-busy{opacity:.58;pointer-events:none}
   .cart-summary{position:sticky;top:110px;padding:26px;border:1px solid rgba(255,255,255,.14);background:#0b0d0f}.summary-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:11px 0;color:#bec5ca}.summary-row.total{margin-top:8px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14);font-size:1.1rem;color:#fff}.summary-row.total strong{font-size:1.35rem}.cart-summary p{color:#8f979e;font-size:.78rem;line-height:1.55;margin:14px 0 22px}.shopify-note{margin-top:12px;text-align:center;color:#707980;font-size:.7rem}.checkout-error{min-height:20px;margin-top:10px;color:#e5a998;font-size:.78rem;line-height:1.4}
@@ -91,10 +92,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   const showEmpty = () => {
     currentCart = null;
+    localStorage.removeItem(CART_ID_KEY);
+    localStorage.setItem(CART_COUNT_KEY, '0');
+
+    if (linesRoot instanceof HTMLElement) linesRoot.replaceChildren();
+    if (countNode) countNode.textContent = '0';
+    if (subtotalNode) subtotalNode.textContent = '—';
+    if (checkoutError) checkoutError.textContent = '';
+    if (checkoutButton instanceof HTMLButtonElement) {
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = 'Checkout';
+    }
+
     if (content instanceof HTMLElement) content.hidden = true;
     if (empty instanceof HTMLElement) empty.hidden = false;
     setMessage('');
-    localStorage.setItem(CART_COUNT_KEY, '0');
     window.dispatchEvent(new CustomEvent('vnh-cart-updated', { detail: { totalQuantity: 0 } }));
   };
 
@@ -179,10 +191,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     input.addEventListener('change', async () => {
       const quantity = Math.max(1, Math.min(99, Number(input.value) || 1));
       input.value = String(quantity);
+      const cartId = currentCart?.id || localStorage.getItem(CART_ID_KEY) || '';
+      const lineId = String(line?.id || '');
+      if (!cartId || !lineId) {
+        showEmpty();
+        return;
+      }
       article.classList.add('is-busy');
       setMessage('Updating cart…');
       try {
-        const cart = await apiPost({ action: 'update', cartId: currentCart?.id, lineId: line.id, quantity });
+        const cart = await apiPost({ action: 'update', cartId, lineId, quantity });
         renderCart(cart);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Unable to update quantity.', true);
@@ -191,14 +209,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     });
 
     remove.addEventListener('click', async () => {
+      const cartId = currentCart?.id || localStorage.getItem(CART_ID_KEY) || '';
+      const lineId = String(line?.id || '');
+      if (!cartId || !lineId) {
+        showEmpty();
+        return;
+      }
+
+      remove.disabled = true;
       article.classList.add('is-busy');
       setMessage('Removing item…');
       try {
-        const cart = await apiPost({ action: 'remove', cartId: currentCart?.id, lineId: line.id });
+        const cart = await apiPost({ action: 'remove', cartId, lineId });
+        const remainingLines = Array.isArray(cart?.lines?.nodes) ? cart.lines.nodes : [];
+        if (!remainingLines.length || Number(cart?.totalQuantity || 0) === 0) {
+          showEmpty();
+          return;
+        }
         renderCart(cart);
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Unable to remove item.', true);
         article.classList.remove('is-busy');
+        remove.disabled = false;
       }
     });
 
@@ -206,19 +238,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   };
 
   const renderCart = (cart) => {
-    currentCart = cart;
-    publishCart(cart);
     const lines = Array.isArray(cart?.lines?.nodes) ? cart.lines.nodes : [];
-    if (!lines.length || !cart.totalQuantity) {
+    if (!cart?.id || !lines.length || Number(cart?.totalQuantity || 0) === 0) {
       showEmpty();
       return;
     }
 
+    currentCart = cart;
+    publishCart(cart);
     if (empty instanceof HTMLElement) empty.hidden = true;
     if (content instanceof HTMLElement) content.hidden = false;
-    if (linesRoot instanceof HTMLElement) {
-      linesRoot.replaceChildren(...lines.map(renderLine));
-    }
+    if (linesRoot instanceof HTMLElement) linesRoot.replaceChildren(...lines.map(renderLine));
     if (countNode) countNode.textContent = String(cart.totalQuantity || 0);
     if (subtotalNode) subtotalNode.textContent = money(cart.cost?.subtotalAmount);
     setMessage('');
@@ -234,7 +264,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const response = await fetch(`/api/shopify/cart?cartId=${encodeURIComponent(cartId)}`, { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok || !payload?.ok || !payload?.cart) {
-        localStorage.removeItem(CART_ID_KEY);
         showEmpty();
         return;
       }
@@ -247,7 +276,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   if (checkoutButton instanceof HTMLButtonElement) {
     checkoutButton.addEventListener('click', async () => {
       const cartId = currentCart?.id || localStorage.getItem(CART_ID_KEY) || '';
-      if (!cartId) return;
+      if (!cartId) {
+        showEmpty();
+        return;
+      }
       checkoutButton.disabled = true;
       checkoutButton.textContent = 'Opening checkout…';
       if (checkoutError) checkoutError.textContent = '';
