@@ -7,7 +7,6 @@ const SITE = 'https://vnhofficial.com';
 const staticRoutes = [
   '/',
   '/shop',
-  '/mission',
   '/contact',
   '/policies/terms-of-service',
   '/policies/refund-policy',
