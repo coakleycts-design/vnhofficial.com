@@ -24,7 +24,6 @@ const brandTagline = configuredBrandTagline.toUpperCase() === 'REAL PEOPLE. REAL
   : configuredBrandTagline;
 const companyName = 'VNH Engineered Design';
 const navShopLabel = text(siteSettings.navShopLabel, 'Shop');
-const navMissionLabel = text(siteSettings.navMissionLabel, 'Mission');
 const navContactLabel = text(siteSettings.navContactLabel, 'Contact');
 const browseShopAriaLabel = text(siteSettings.browseShopAriaLabel, 'Browse shop');
 const accountAriaLabel = text(siteSettings.accountAriaLabel, 'Account');
@@ -34,7 +33,6 @@ const footerText = configuredFooterText.toUpperCase() === 'VNH. REAL PEOPLE. REA
   ? companyName
   : configuredFooterText;
 const footerShopLabel = text(siteSettings.footerShopLabel, 'Shop');
-const footerMissionLabel = text(siteSettings.footerMissionLabel, 'Mission');
 const footerContactLabel = text(siteSettings.footerContactLabel, 'Contact');
 const logoSrc = siteSettings.logoUrl || '/vnh-logo-clean.svg';
 const topoSrc = siteSettings.topoUrl || '/vnh-topo-simple.svg';
@@ -139,7 +137,6 @@ const jsonLd = structuredData
         </a>
         <nav class="main-nav" aria-label="Primary navigation">
           <a href="/shop" aria-current={currentPath.startsWith('/shop') ? 'page' : undefined}>{navShopLabel}</a>
-          <a href="/mission" aria-current={currentPath === '/mission' ? 'page' : undefined}>{navMissionLabel}</a>
           <a href="/contact" aria-current={currentPath === '/contact' ? 'page' : undefined}>{navContactLabel}</a>
         </nav>
         <div class="header-actions" aria-label="Site actions">
@@ -157,7 +154,6 @@ const jsonLd = structuredData
       <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" data-mobile-menu hidden>
         <div class="container mobile-nav-inner">
           <a href="/shop" aria-current={currentPath.startsWith('/shop') ? 'page' : undefined}>{navShopLabel}</a>
-          <a href="/mission" aria-current={currentPath === '/mission' ? 'page' : undefined}>{navMissionLabel}</a>
           <a href="/contact" aria-current={currentPath === '/contact' ? 'page' : undefined}>{navContactLabel}</a>
           <a href="/account" aria-current={currentPath === '/account' ? 'page' : undefined}>Account</a>
         </div>
@@ -168,7 +164,7 @@ const jsonLd = structuredData
       <div class="container footer-inner">
         <div class="footer-brand"><img src={logoSrc} alt="" /><span>{brandName}</span></div>
         <div>© {new Date().getFullYear()} {footerText}</div>
-        <div class="footer-links"><a href="/shop">{footerShopLabel}</a><a href="/mission">{footerMissionLabel}</a><a href="/contact">{footerContactLabel}</a></div>
+        <div class="footer-links"><a href="/shop">{footerShopLabel}</a><a href="/contact">{footerContactLabel}</a></div>
       </div>
       <nav class="container footer-policies" aria-label="Store policies">
         <a href="/policies/terms-of-service">Terms of Service</a>
